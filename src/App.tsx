@@ -97,6 +97,13 @@ function App() {
     return () => controller.abort()
   }, [state, refreshRecents])
 
+  // Tab title outside the reader; ReaderTopbar owns it while a doc is open.
+  useEffect(() => {
+    if (state.view !== 'reader') {
+      document.title = 'Quiet Reader'
+    }
+  }, [state])
+
   // Browser back/forward: re-derive state from the location.
   useEffect(() => {
     const onPopState = () => setState(stateFromLocation())

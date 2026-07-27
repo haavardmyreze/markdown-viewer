@@ -25,22 +25,24 @@ import DocAssistant from '../DocAssistant'
 import DocComments from '../DocComments'
 import type { CommentAnchor } from '../documentComments'
 import { useDocumentComments } from '../documentComments'
-import { AskIcon, CommentsIcon, SearchIcon } from '../ui/icons'
 import { ReaderTopbar, type TopbarAction } from '../ui/ReaderTopbar'
 import { SearchPanel } from '../ui/SearchPanel'
 import { ThemePicker } from '../ui/ThemePicker'
-import { usePanels } from '../ui/usePanels'
+import { useDocumentShell } from '../ui/useDocumentShell'
 import { CommandPalette } from '../ui/CommandPalette'
 import { InkAnnotation } from '../ui/InkAnnotation'
 import { LaserPointer } from '../ui/LaserPointer'
 import { SelectionMenu } from '../ui/SelectionMenu'
 import {
+  createAskTopbarAction,
+  createCommentsTopbarAction,
+  createPresentTopbarAction,
+  createSearchTopbarAction,
+} from '../ui/topbarActions'
+import {
   createDrawPaletteAction,
-  createDrawTopbarAction,
   createLaserPaletteAction,
-  createLaserTopbarAction,
   useCodeInkBinding,
-  useReaderDrawMode,
 } from '../ui/useReaderInk'
 import { actionsPaletteGroup, libraryPaletteGroup, themePaletteGroup } from '../ui/paletteGroups'
 import { useReaderPageTheme } from '../ui/useReaderPageTheme'
@@ -89,14 +91,25 @@ export default function CodeReader({
   const codeRef = useRef<HTMLPreElement | null>(null)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
 
-  const panels = usePanels()
-  const { closeAll: closeAllPanels, open: openPanel } = panels
-  const searchOpen = panels.isOpen('search')
-  const commentsOpen = panels.isOpen('comments')
-  const assistantOpen = panels.isOpen('assistant')
-
-  const { drawMode, laserMode, toggleDrawMode, toggleLaserMode, drawModeRef } =
-    useReaderDrawMode(closeAllPanels)
+  const {
+    panels,
+    closeAllPanels,
+    openPanel,
+    searchOpen,
+    commentsOpen,
+    assistantOpen,
+    present,
+  } = useDocumentShell()
+  const {
+    drawMode,
+    laserMode,
+    presentActive,
+    toggleDrawMode,
+    toggleLaserMode,
+    togglePresent,
+    exitPresentationMode,
+    drawModeRef,
+  } = present
   const inkBinding = useCodeInkBinding(docColRef, pageZoom)
 
   useReaderPageTheme(theme)
@@ -321,35 +334,17 @@ export default function CodeReader({
   }, [displayContent])
 
   const topbarActions: TopbarAction[] = [
-    {
-      id: 'search',
-      label: 'Search',
-      icon: <SearchIcon />,
-      active: searchOpen || Boolean(trimmedSearchQuery),
-      onToggle: () => {
-        panels.toggle('search')
-        if (!searchOpen) {
-          focusSearchInput()
-        }
-      },
-    },
-    {
-      id: 'comments',
-      label: 'Comments',
-      icon: <CommentsIcon />,
-      active: commentsOpen,
-      badge: comments.length || undefined,
-      onToggle: () => panels.toggle('comments'),
-    },
-    {
-      id: 'assistant',
-      label: 'Ask',
-      icon: <AskIcon />,
-      active: assistantOpen,
-      onToggle: () => panels.toggle('assistant'),
-    },
-    createDrawTopbarAction(drawMode, toggleDrawMode),
-    createLaserTopbarAction(laserMode, toggleLaserMode),
+    createSearchTopbarAction(searchOpen || Boolean(trimmedSearchQuery), () => {
+      panels.toggle('search')
+      if (!searchOpen) {
+        focusSearchInput()
+      }
+    }),
+    createCommentsTopbarAction(commentsOpen, comments.length, () =>
+      panels.toggle('comments'),
+    ),
+    createAskTopbarAction(assistantOpen, () => panels.toggle('assistant')),
+    createPresentTopbarAction(presentActive, togglePresent),
   ]
 
   const settingsContent = (
@@ -474,8 +469,19 @@ export default function CodeReader({
       data-laser-mode={laserMode ? 'true' : undefined}
     >
       <CommandPalette groups={paletteGroups} onAskQuery={askQuery} />
-      <InkAnnotation docKey={docKey} drawMode={drawMode} laserMode={laserMode} {...inkBinding} />
-      <LaserPointer active={laserMode} />
+      <InkAnnotation
+        docKey={docKey}
+        drawMode={drawMode}
+        laserMode={laserMode}
+        onSwitchToLaser={toggleLaserMode}
+        onExit={exitPresentationMode}
+        {...inkBinding}
+      />
+      <LaserPointer
+        active={laserMode}
+        onSwitchToDraw={toggleDrawMode}
+        onExit={exitPresentationMode}
+      />
       <SelectionMenu
         scopeRef={docColRef}
         disabled={drawMode || laserMode || commentsOpen}
@@ -549,6 +555,7 @@ export default function CodeReader({
         onHome={onHome}
         actions={topbarActions}
         settings={settingsContent}
+        receded={presentActive}
       />
 
       <div

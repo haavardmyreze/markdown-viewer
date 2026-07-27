@@ -56,28 +56,52 @@ export type TopbarAction = {
   icon?: ReactNode
   active?: boolean
   badge?: number
+  /** Keyboard shortcut shown in the tooltip, e.g. 'D'. */
+  shortcut?: string
   onToggle: () => void
 }
 
 type ReaderTopbarProps = {
   fileName: string
+  /** Human title shown in the topbar and browser tab; falls back to fileName. */
+  displayName?: string
   onHome: () => void
   actions: TopbarAction[]
   /** Settings popover content (settings groups). Omit to hide the gear. */
   settings?: ReactNode
+  /** Force the chrome away (presentation mode). */
+  receded?: boolean
 }
 
 /**
  * The shared reader chrome: Library link, document name, panel toggles, and
  * the settings popover. Every format reader renders this same topbar.
+ * Actions are icon buttons with tooltips — labels never wrap or collide.
  */
-export function ReaderTopbar({ fileName, onHome, actions, settings }: ReaderTopbarProps) {
+export function ReaderTopbar({
+  fileName,
+  displayName,
+  onHome,
+  actions,
+  settings,
+  receded = false,
+}: ReaderTopbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settingsRef = useRef<HTMLDivElement | null>(null)
   const closeSettings = useCallback(() => setSettingsOpen(false), [])
   const { hidden, progress } = useRecedingChrome(settingsOpen)
 
   useDismissablePopover(settingsRef, settingsOpen, closeSettings)
+
+  const shownName = displayName?.trim() || fileName
+
+  // The chrome owns the browser tab title while a document is open.
+  useEffect(() => {
+    document.title = `${shownName} — Quiet Reader`
+    return () => {
+      document.title = 'Quiet Reader'
+    }
+  }, [shownName])
 
   return (
     <>
@@ -92,10 +116,11 @@ export function ReaderTopbar({ fileName, onHome, actions, settings }: ReaderTopb
       />
       <div
         className={
-          hidden
+          hidden || receded
             ? 'topbar-shell reader-topbar-shell topbar-hidden'
             : 'topbar-shell reader-topbar-shell'
         }
+        aria-hidden={receded || undefined}
       >
         <header className="app-topbar topbar-pill reader-topbar">
           <div className="topbar-lead">
@@ -104,13 +129,14 @@ export function ReaderTopbar({ fileName, onHome, actions, settings }: ReaderTopb
               className="ghost-button home-link"
               onClick={onHome}
               aria-label="Back to library"
+              title="Back to library"
             >
               <BackIcon />
               <span>Library</span>
             </button>
             <span className="topbar-divider" aria-hidden="true" />
             <p className="doc-name" title={fileName}>
-              {fileName}
+              {shownName}
             </p>
           </div>
           <div className="controls">
@@ -118,16 +144,16 @@ export function ReaderTopbar({ fileName, onHome, actions, settings }: ReaderTopb
               <button
                 type="button"
                 key={action.id}
-                className={action.active ? 'ghost-button active' : 'ghost-button'}
+                className={action.active ? 'icon-button active' : 'icon-button'}
                 aria-label={action.label}
                 aria-expanded={action.active ?? false}
+                title={action.shortcut ? `${action.label} (${action.shortcut})` : action.label}
                 onClick={() => {
                   setSettingsOpen(false)
                   action.onToggle()
                 }}
               >
                 {action.icon}
-                <span>{action.label}</span>
                 {action.badge ? (
                   <span className="comment-count-badge">{action.badge}</span>
                 ) : null}
@@ -136,19 +162,25 @@ export function ReaderTopbar({ fileName, onHome, actions, settings }: ReaderTopb
 
             {settings ? (
               <div className="controls-actions" ref={settingsRef}>
+                <span className="topbar-divider" aria-hidden="true" />
                 <button
                   type="button"
                   className={settingsOpen ? 'icon-button active' : 'icon-button'}
                   aria-label="Settings"
                   aria-expanded={settingsOpen}
+                  title="Settings"
                   onClick={() => setSettingsOpen((value) => !value)}
                 >
                   <SettingsIcon />
                 </button>
 
                 {settingsOpen ? (
-                  <div className="settings-popover" role="dialog" aria-label="Settings">
+                  <div className="settings-popover panel-surface" role="dialog" aria-label="Settings">
                     {settings}
+                    <p className="settings-footer-hint">
+                      Command palette <kbd>⌘</kbd>
+                      <kbd>Space</kbd>
+                    </p>
                   </div>
                 ) : null}
               </div>

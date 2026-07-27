@@ -18,23 +18,27 @@ import {
   isEditableKeyboardTarget,
   stepPageZoom,
 } from '../readerConfig'
-import { AskIcon, CommentsIcon, ContentsIcon, SearchIcon } from '../ui/icons'
 import { ReaderTopbar, type TopbarAction } from '../ui/ReaderTopbar'
+import { useDocumentShell } from '../ui/useDocumentShell'
+import { saveDocumentThumbnail } from '../ui/documentThumbnails'
 import { SearchPanel } from '../ui/SearchPanel'
 import { ThemePicker } from '../ui/ThemePicker'
-import { usePanels } from '../ui/usePanels'
 import { CommandPalette } from '../ui/CommandPalette'
 import { InkAnnotation } from '../ui/InkAnnotation'
 import { LaserPointer } from '../ui/LaserPointer'
 import { SelectionMenu } from '../ui/SelectionMenu'
 import { TocRail } from '../ui/TocRail'
 import {
+  createAskTopbarAction,
+  createCommentsTopbarAction,
+  createPresentTopbarAction,
+  createSearchTopbarAction,
+  createTocTopbarAction,
+} from '../ui/topbarActions'
+import {
   createDrawPaletteAction,
-  createDrawTopbarAction,
   createLaserPaletteAction,
-  createLaserTopbarAction,
   usePdfInkBinding,
-  useReaderDrawMode,
 } from '../ui/useReaderInk'
 import {
   actionsPaletteGroup,
@@ -101,14 +105,26 @@ export default function PdfReader({
     tick: number
   } | null>(null)
 
-  const panels = usePanels()
-  const { closeAll: closeAllPanels, open: openPanel } = panels
-  const tocOpen = panels.isOpen('toc')
-  const searchOpen = panels.isOpen('search')
-  const commentsOpen = panels.isOpen('comments')
-  const assistantOpen = panels.isOpen('assistant')
-  const { drawMode, laserMode, toggleDrawMode, toggleLaserMode, drawModeRef } =
-    useReaderDrawMode(closeAllPanels)
+  const {
+    panels,
+    closeAllPanels,
+    openPanel,
+    tocOpen,
+    searchOpen,
+    commentsOpen,
+    assistantOpen,
+    present,
+  } = useDocumentShell()
+  const {
+    drawMode,
+    laserMode,
+    presentActive,
+    toggleDrawMode,
+    toggleLaserMode,
+    togglePresent,
+    exitPresentationMode,
+    drawModeRef,
+  } = present
   const inkBinding = usePdfInkBinding(docColRef, pageZoom)
 
   const commentSource = useMemo(
@@ -164,6 +180,11 @@ export default function PdfReader({
   const focusSearchInput = useCallback(() => {
     window.requestAnimationFrame(() => searchInputRef.current?.focus())
   }, [])
+
+  const captureThumbnail = useCallback(
+    (canvas: HTMLCanvasElement) => saveDocumentThumbnail(docKey, canvas),
+    [docKey],
+  )
 
   useEffect(() => {
     const root = readerRootRef.current
@@ -415,42 +436,18 @@ export default function PdfReader({
   }
 
   const topbarActions: TopbarAction[] = [
-    {
-      id: 'toc',
-      label: 'Contents',
-      icon: <ContentsIcon />,
-      active: tocOpen,
-      onToggle: () => panels.toggle('toc'),
-    },
-    {
-      id: 'search',
-      label: 'Search',
-      icon: <SearchIcon />,
-      active: searchOpen || Boolean(trimmedSearchQuery),
-      onToggle: () => {
-        panels.toggle('search')
-        if (!searchOpen) {
-          focusSearchInput()
-        }
-      },
-    },
-    {
-      id: 'comments',
-      label: 'Comments',
-      icon: <CommentsIcon />,
-      active: commentsOpen,
-      badge: comments.length || undefined,
-      onToggle: () => panels.toggle('comments'),
-    },
-    {
-      id: 'assistant',
-      label: 'Ask',
-      icon: <AskIcon />,
-      active: assistantOpen,
-      onToggle: () => panels.toggle('assistant'),
-    },
-    createDrawTopbarAction(drawMode, toggleDrawMode),
-    createLaserTopbarAction(laserMode, toggleLaserMode),
+    createTocTopbarAction(tocOpen, () => panels.toggle('toc')),
+    createSearchTopbarAction(searchOpen || Boolean(trimmedSearchQuery), () => {
+      panels.toggle('search')
+      if (!searchOpen) {
+        focusSearchInput()
+      }
+    }),
+    createCommentsTopbarAction(commentsOpen, comments.length, () =>
+      panels.toggle('comments'),
+    ),
+    createAskTopbarAction(assistantOpen, () => panels.toggle('assistant')),
+    createPresentTopbarAction(presentActive, togglePresent),
   ]
 
   const settingsContent = (
@@ -539,8 +536,19 @@ export default function PdfReader({
       data-laser-mode={laserMode ? 'true' : undefined}
     >
       <CommandPalette groups={paletteGroups} />
-      <InkAnnotation docKey={docKey} drawMode={drawMode} laserMode={laserMode} {...inkBinding} />
-      <LaserPointer active={laserMode} />
+      <InkAnnotation
+        docKey={docKey}
+        drawMode={drawMode}
+        laserMode={laserMode}
+        onSwitchToLaser={toggleLaserMode}
+        onExit={exitPresentationMode}
+        {...inkBinding}
+      />
+      <LaserPointer
+        active={laserMode}
+        onSwitchToDraw={toggleDrawMode}
+        onExit={exitPresentationMode}
+      />
       <SelectionMenu
         scopeRef={docColRef}
         disabled={commentsOpen || drawMode}
@@ -567,6 +575,7 @@ export default function PdfReader({
         onHome={onHome}
         actions={topbarActions}
         settings={settingsContent}
+        receded={presentActive}
       />
 
       <DocAssistant
@@ -654,6 +663,7 @@ export default function PdfReader({
                   comments={comments}
                   activeCommentId={activeCommentId}
                   commentsOpen={commentsOpen}
+                  onRendered={page.pageNumber === 1 ? captureThumbnail : undefined}
                 />
               ))}
             </section>

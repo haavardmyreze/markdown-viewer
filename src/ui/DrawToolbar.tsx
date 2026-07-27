@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { INK_COLOR_OPTIONS } from './inkConfig'
-import { EraserIcon, MarkerIcon, PenIcon } from './icons'
+import { CloseIcon, EraserIcon, LaserIcon, MarkerIcon, PenIcon } from './icons'
 
 export type DrawTool = 'pen' | 'marker' | 'eraser'
 
@@ -10,56 +10,90 @@ type DrawToolbarProps = {
   onColorChange: (color: string) => void
   onToolChange: (tool: DrawTool) => void
   onClearAll: () => void
+  onSwitchToLaser?: () => void
+  onExit?: () => void
 }
 
 function isDrawingTool(tool: DrawTool) {
   return tool === 'pen' || tool === 'marker'
 }
 
+/**
+ * The presentation cluster while drawing. Mirrors LaserToolbar so switching
+ * tools never moves the controls under the pointer.
+ */
 export function DrawToolbar({
   color,
   tool,
   onColorChange,
   onToolChange,
   onClearAll,
+  onSwitchToLaser,
+  onExit,
 }: DrawToolbarProps) {
   return (
-    <div className="draw-toolbar-shell" role="toolbar" aria-label="Draw tools">
-      <div className="draw-toolbar app-topbar">
-        <div className="draw-toolbar-brushes" role="group" aria-label="Brush type">
+    <div className="present-toolbar-shell" role="toolbar" aria-label="Presentation tools">
+      <div className="present-toolbar app-topbar">
+        <div className="present-toolbar-tools" role="group" aria-label="Tool">
+          {onSwitchToLaser ? (
+            <button
+              type="button"
+              className="icon-button present-tool-button"
+              aria-label="Laser pointer"
+              aria-pressed={false}
+              title="Laser pointer (L)"
+              onClick={onSwitchToLaser}
+            >
+              <LaserIcon />
+            </button>
+          ) : null}
           <button
             type="button"
             className={
               tool === 'pen'
-                ? 'ghost-button active draw-tool-button'
-                : 'ghost-button draw-tool-button'
+                ? 'icon-button active present-tool-button'
+                : 'icon-button present-tool-button'
             }
             aria-label="Pen"
             aria-pressed={tool === 'pen'}
+            title="Pen (D)"
             onClick={() => onToolChange('pen')}
           >
             <PenIcon />
-            <span>Pen</span>
           </button>
           <button
             type="button"
             className={
               tool === 'marker'
-                ? 'ghost-button active draw-tool-button'
-                : 'ghost-button draw-tool-button'
+                ? 'icon-button active present-tool-button'
+                : 'icon-button present-tool-button'
             }
             aria-label="Marker"
             aria-pressed={tool === 'marker'}
+            title="Marker"
             onClick={() => onToolChange('marker')}
           >
             <MarkerIcon />
-            <span>Marker</span>
+          </button>
+          <button
+            type="button"
+            className={
+              tool === 'eraser'
+                ? 'icon-button active present-tool-button'
+                : 'icon-button present-tool-button'
+            }
+            aria-label="Eraser"
+            aria-pressed={tool === 'eraser'}
+            title="Eraser"
+            onClick={() => onToolChange('eraser')}
+          >
+            <EraserIcon />
           </button>
         </div>
 
         <span className="topbar-divider" aria-hidden="true" />
 
-        <div className="draw-toolbar-colors" role="group" aria-label="Ink colors">
+        <div className="present-toolbar-colors" role="group" aria-label="Ink colors">
           {INK_COLOR_OPTIONS.map((option) => (
             <button
               key={option.id}
@@ -86,29 +120,27 @@ export function DrawToolbar({
 
         <button
           type="button"
-          className={
-            tool === 'eraser'
-              ? 'ghost-button active draw-tool-button'
-              : 'ghost-button draw-tool-button'
-          }
-          aria-label="Eraser"
-          aria-pressed={tool === 'eraser'}
-          onClick={() => onToolChange('eraser')}
-        >
-          <EraserIcon />
-          <span>Eraser</span>
-        </button>
-
-        <span className="topbar-divider" aria-hidden="true" />
-
-        <button
-          type="button"
-          className="ghost-button draw-tool-button draw-clear-button"
+          className="ghost-button present-clear-button"
           aria-label="Clear all drawings"
           onClick={onClearAll}
         >
-          Clear all
+          Clear
         </button>
+
+        {onExit ? (
+          <>
+            <span className="topbar-divider" aria-hidden="true" />
+            <button
+              type="button"
+              className="icon-button present-tool-button"
+              aria-label="Exit presentation"
+              title="Exit presentation (Esc)"
+              onClick={onExit}
+            >
+              <CloseIcon />
+            </button>
+          </>
+        ) : null}
       </div>
     </div>
   )

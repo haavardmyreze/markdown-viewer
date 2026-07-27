@@ -104,6 +104,16 @@ export const LaserIcon = (props: IconProps = {}) => (
 
 export const PenIcon = DrawIcon
 
+/** Presentation mode — a screen with a pointer beam. */
+export const PresentIcon = (props: IconProps = {}) => (
+  <svg {...iconAttrs(props)}>
+    <rect x="3" y="4" width="18" height="12" rx="2" />
+    <path d="M12 16v3" />
+    <path d="M8.5 21h7" />
+    <circle cx="12" cy="10" r="1.6" fill="currentColor" stroke="none" />
+  </svg>
+)
+
 export const MarkerIcon = (props: IconProps = {}) => (
   <svg {...iconAttrs(props)}>
     <path d="M4 20h16" />

@@ -31,11 +31,11 @@ import { ThemePicker } from '../ui/ThemePicker'
 import { CommandPalette } from '../ui/CommandPalette'
 import { InkAnnotation } from '../ui/InkAnnotation'
 import { LaserPointer } from '../ui/LaserPointer'
+import { createPresentTopbarAction } from '../ui/topbarActions'
+import { saveDocumentThumbnail } from '../ui/documentThumbnails'
 import {
   createDrawPaletteAction,
-  createDrawTopbarAction,
   createLaserPaletteAction,
-  createLaserTopbarAction,
   useCsvInkBinding,
   usePanZoomInkNavigation,
   useReaderDrawMode,
@@ -105,8 +105,16 @@ export default function ImageReader({
   const strokeUnitScale = imageStrokeUnitScale(sheetLayout)
 
   useReaderPageTheme(theme)
-  const { drawMode, laserMode, toggleDrawMode, toggleLaserMode, drawModeRef } =
-    useReaderDrawMode()
+  const {
+    drawMode,
+    laserMode,
+    presentActive,
+    toggleDrawMode,
+    toggleLaserMode,
+    togglePresent,
+    exitPresentationMode,
+    drawModeRef,
+  } = useReaderDrawMode()
 
   const isHdr = decoded?.kind === 'exr' || decoded?.kind === 'hdr'
 
@@ -254,6 +262,17 @@ export default function ImageReader({
       cancelled = true
     }
   }, [imageData, fileName, exposure, toneMapping])
+
+  // Remember a small real thumbnail for the library card (first decode only,
+  // so EXR exposure scrubbing doesn't thrash storage).
+  const thumbnailCapturedRef = useRef(false)
+  useEffect(() => {
+    if (!decoded || thumbnailCapturedRef.current) {
+      return
+    }
+    thumbnailCapturedRef.current = true
+    saveDocumentThumbnail(docKey, decoded.canvas)
+  }, [decoded, docKey])
 
   useLayoutEffect(() => {
     if (!decoded) {
@@ -416,8 +435,7 @@ export default function ImageReader({
     .join(' ')
 
   const topbarActions: TopbarAction[] = [
-    createDrawTopbarAction(drawMode, toggleDrawMode),
-    createLaserTopbarAction(laserMode, toggleLaserMode),
+    createPresentTopbarAction(presentActive, togglePresent),
   ]
 
   const settingsContent = (
@@ -537,8 +555,19 @@ export default function ImageReader({
       data-laser-mode={laserMode ? 'true' : undefined}
     >
       <CommandPalette groups={paletteGroups} />
-      <InkAnnotation docKey={docKey} drawMode={drawMode} laserMode={laserMode} {...inkBinding} />
-      <LaserPointer active={laserMode} />
+      <InkAnnotation
+        docKey={docKey}
+        drawMode={drawMode}
+        laserMode={laserMode}
+        onSwitchToLaser={toggleLaserMode}
+        onExit={exitPresentationMode}
+        {...inkBinding}
+      />
+      <LaserPointer
+        active={laserMode}
+        onSwitchToDraw={toggleDrawMode}
+        onExit={exitPresentationMode}
+      />
 
       <div className="reader-canvas reader-canvas-image" data-theme={theme}>
         <div className="doc-stage csv-stage">
@@ -589,6 +618,7 @@ export default function ImageReader({
         onHome={onHome}
         actions={topbarActions}
         settings={settingsContent}
+        receded={presentActive}
       />
     </div>
   )

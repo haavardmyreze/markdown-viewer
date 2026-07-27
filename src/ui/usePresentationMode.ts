@@ -37,6 +37,17 @@ export function usePresentationMode(onActivate?: () => void) {
     })
   }, [onActivate])
 
+  /** One switch for the whole presentation surface: enter with the laser, exit from any tool. */
+  const togglePresent = useCallback(() => {
+    setMode((current) => {
+      if (current !== null) {
+        return null
+      }
+      onActivate?.()
+      return 'laser'
+    })
+  }, [onActivate])
+
   const setDrawMode = useCallback((active: boolean) => {
     setMode((current) => {
       if (active) {
@@ -101,8 +112,10 @@ export function usePresentationMode(onActivate?: () => void) {
     mode,
     drawMode,
     laserMode,
+    presentActive: mode !== null,
     toggleDrawMode,
     toggleLaserMode,
+    togglePresent,
     exitPresentationMode,
     setDrawMode,
     modeRef,

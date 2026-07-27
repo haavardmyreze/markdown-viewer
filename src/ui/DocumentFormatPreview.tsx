@@ -1,25 +1,12 @@
 import type { DocumentFormat } from '../documents/types'
-import { formatRecentFormatLabel } from '../recentDocuments'
-import {
-  CodeFormatIcon,
-  CsvFormatIcon,
-  ImageFormatIcon,
-  MarkdownFormatIcon,
-  PdfFormatIcon,
-} from './icons'
+import { ImageFormatIcon } from './icons'
 
 type DocumentFormatPreviewProps = {
   format: DocumentFormat
   title: string
+  /** Real captured thumbnail (data URL); replaces the stylized preview. */
+  thumbnail?: string | null
 }
-
-const FORMAT_ICONS = {
-  markdown: MarkdownFormatIcon,
-  pdf: PdfFormatIcon,
-  csv: CsvFormatIcon,
-  image: ImageFormatIcon,
-  code: CodeFormatIcon,
-} as const
 
 function MarkdownPreviewBody({ title }: { title: string }) {
   return (
@@ -77,16 +64,21 @@ function CodePreviewBody() {
   )
 }
 
-export function DocumentFormatPreview({ format, title }: DocumentFormatPreviewProps) {
-  const Icon = FORMAT_ICONS[format]
+export function DocumentFormatPreview({
+  format,
+  title,
+  thumbnail,
+}: DocumentFormatPreviewProps) {
+  if (thumbnail) {
+    return (
+      <div className={`doc-card-preview doc-card-preview-${format}`}>
+        <img className="doc-card-thumb" src={thumbnail} alt="" aria-hidden="true" />
+      </div>
+    )
+  }
 
   return (
     <div className={`doc-card-preview doc-card-preview-${format}`}>
-      <span className={`doc-card-format-badge doc-card-format-badge-${format}`}>
-        <Icon size={14} strokeWidth={1.9} />
-        {formatRecentFormatLabel(format)}
-      </span>
-
       {format === 'markdown' ? <MarkdownPreviewBody title={title} /> : null}
       {format === 'pdf' ? <PdfPreviewBody title={title} /> : null}
       {format === 'csv' ? <CsvPreviewBody /> : null}

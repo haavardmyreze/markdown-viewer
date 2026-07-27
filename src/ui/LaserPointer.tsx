@@ -10,9 +10,13 @@ import { LaserToolbar } from './LaserToolbar'
 
 type LaserPointerProps = {
   active: boolean
+  /** Switch the presentation cluster over to the pen. */
+  onSwitchToDraw?: () => void
+  /** Leave presentation mode entirely. */
+  onExit?: () => void
 }
 
-export function LaserPointer({ active }: LaserPointerProps) {
+export function LaserPointer({ active, onSwitchToDraw, onExit }: LaserPointerProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const contextRef = useRef<CanvasRenderingContext2D | null>(null)
   const trailRef = useRef<LaserTrailPoint[]>([])
@@ -159,7 +163,12 @@ export function LaserPointer({ active }: LaserPointerProps) {
 
   return (
     <>
-      <LaserToolbar color={color} onColorChange={setColor} />
+      <LaserToolbar
+        color={color}
+        onColorChange={setColor}
+        onSwitchToDraw={onSwitchToDraw}
+        onExit={onExit}
+      />
       <canvas ref={canvasRef} className="laser-overlay-canvas" aria-hidden="true" />
     </>
   )

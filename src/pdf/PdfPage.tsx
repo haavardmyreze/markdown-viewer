@@ -15,6 +15,8 @@ type PdfPageProps = {
   comments: DocumentComment[]
   activeCommentId: string
   commentsOpen: boolean
+  /** Fires with the page canvas once rasterized (used for thumbnails). */
+  onRendered?: (canvas: HTMLCanvasElement) => void
 }
 
 export default function PdfPage({
@@ -25,6 +27,7 @@ export default function PdfPage({
   comments,
   activeCommentId,
   commentsOpen,
+  onRendered,
 }: PdfPageProps) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const textLayerRef = useRef<HTMLDivElement | null>(null)
@@ -85,6 +88,8 @@ export default function PdfPage({
           return
         }
 
+        onRendered?.(canvas)
+
         const textContent = await page.getTextContent()
         textLayer = new TextLayer({
           textContentSource: textContent,
@@ -118,7 +123,7 @@ export default function PdfPage({
       host.replaceChildren()
       textLayerRef.current = null
     }
-  }, [activeCommentId, comments, pageNumber, pdf, scale, searchQuery])
+  }, [activeCommentId, comments, onRendered, pageNumber, pdf, scale, searchQuery])
 
   useEffect(() => {
     if (!textLayerRef.current) {

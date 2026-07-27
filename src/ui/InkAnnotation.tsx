@@ -27,6 +27,10 @@ type InkAnnotationProps = {
   docKey: string
   drawMode: boolean
   laserMode?: boolean
+  /** Switch the presentation cluster over to the laser pointer. */
+  onSwitchToLaser?: () => void
+  /** Leave presentation mode entirely. */
+  onExit?: () => void
 } & InkBinding
 
 function pointFromEvent(event: PointerEvent, canvas: HTMLCanvasElement): InkPoint {
@@ -60,6 +64,8 @@ export function InkAnnotation({
   docKey,
   drawMode,
   laserMode = false,
+  onSwitchToLaser,
+  onExit,
   contentZoom,
   useSheetCoordinates = false,
   strokeUnitScale = 1,
@@ -743,6 +749,8 @@ export function InkAnnotation({
           onColorChange={setColor}
           onToolChange={setTool}
           onClearAll={clearAllInk}
+          onSwitchToLaser={onSwitchToLaser}
+          onExit={onExit}
         />
       ) : null}
       <canvas

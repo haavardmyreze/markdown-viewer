@@ -138,13 +138,14 @@
 }
 
 .icon-button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2.1rem;
   height: 2.1rem;
-  border: 1px solid var(--line-strong);
-  background: var(--surface-raised);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--ink-soft);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -152,14 +153,14 @@
 }
 
 .icon-button:hover {
-  border-color: var(--ink-soft);
+  background: var(--surface-raised);
   color: var(--ink);
 }
 
 .icon-button.active {
-  border-color: var(--ink-soft);
   color: var(--ink);
-  background: var(--surface);
+  background: var(--surface-raised);
+  border-color: color-mix(in srgb, var(--line-strong) 70%, transparent);
 }
 
 /* Contents toggle only appears on narrow screens (see media query). */
@@ -222,10 +223,6 @@
   max-height: min(72vh, calc(100vh - var(--topbar-total) - 2rem));
   overflow-y: auto;
   padding: 0.95rem 0.9rem 1rem;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--line-strong) 62%, transparent);
-  border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-card);
   overflow-x: hidden;
   isolation: isolate;
   scrollbar-width: thin;
@@ -244,16 +241,11 @@
   position: fixed;
   top: calc(var(--topbar-total) + 0.8rem);
   right: var(--gutter);
-  bottom: 0.8rem;
   width: clamp(18rem, 21vw, 24rem);
+  max-height: calc(100vh - var(--topbar-total) - 1.6rem);
   z-index: 46;
   display: flex;
   flex-direction: column;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 58%, transparent);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--surface) 93%, transparent);
-  box-shadow: var(--shadow-card);
-  backdrop-filter: blur(12px);
 }
 
 .search-panel-header {
@@ -490,10 +482,6 @@
   z-index: 40;
   width: 16rem;
   padding: 0.9rem;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -503,6 +491,29 @@
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+}
+
+.settings-footer-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-content: center;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--line-strong) 40%, transparent);
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.settings-footer-hint kbd {
+  font-family: var(--font-ui);
+  font-size: 0.64rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-raised);
+  color: var(--ink-soft);
 }
 
 .settings-label {
@@ -734,7 +745,7 @@
 
 .home-section-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.25rem;
@@ -753,6 +764,80 @@
   font-family: var(--font-ui);
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+/* Compact import affordances — the documents own the page. */
+.home-add-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-add-row .home-count {
+  margin-inline-start: 0.5rem;
+}
+
+.home-add-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.42rem 0.85rem;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.home-add-button:hover {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+
+.home-add-button-drag {
+  border-color: var(--ink-soft);
+  color: var(--ink);
+  background: var(--surface-raised);
+}
+
+.home-add-button input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Invisible paste target: focused on click so ⌘V lands here. */
+.home-paste-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  resize: none;
+  cursor: pointer;
+}
+
+.home-import-error {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  color: #e5484d;
+  margin: -0.5rem 0 1rem;
+}
+
+.doc-card-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
 }
 
 .doc-card-preview {
@@ -791,50 +876,6 @@
     color-mix(in srgb, #5b7fd7 12%, var(--surface-raised)) 0%,
     var(--bg) 100%
   );
-}
-
-.doc-card-format-badge {
-  position: absolute;
-  top: 0.65rem;
-  left: 0.65rem;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.18rem 0.45rem 0.18rem 0.35rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 70%, transparent);
-  background: color-mix(in srgb, var(--surface) 82%, transparent);
-  color: var(--ink-soft);
-  font-family: var(--font-ui);
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.doc-card-format-badge-markdown {
-  color: #4b5563;
-}
-
-.doc-card-format-badge-pdf {
-  color: #b42318;
-  border-color: color-mix(in srgb, #b42318 24%, var(--line-strong));
-}
-
-.doc-card-format-badge-csv {
-  color: #067647;
-  border-color: color-mix(in srgb, #067647 24%, var(--line-strong));
-}
-
-.doc-card-format-badge-image {
-  color: #3b5bcc;
-  border-color: color-mix(in srgb, #3b5bcc 24%, var(--line-strong));
-}
-
-.doc-card-format-badge-code {
-  color: #7c4dff;
-  border-color: color-mix(in srgb, #7c4dff 24%, var(--line-strong));
 }
 
 .doc-card-preview-code {
@@ -1146,83 +1187,6 @@
   backdrop-filter: blur(4px);
 }
 
-.doc-card-import {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  border-style: dashed;
-  border-color: var(--line-strong);
-  background: transparent;
-  min-height: 8.5rem;
-  gap: 0.4rem;
-  padding: 1.75rem 1.25rem;
-}
-
-.doc-card-import:hover {
-  background: color-mix(in srgb, var(--surface) 60%, transparent);
-}
-
-.doc-card-import input {
-  display: none;
-}
-
-.doc-card-import-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 50%;
-  border: 1px solid var(--line-strong);
-  color: var(--ink-soft);
-}
-
-.doc-card-import .doc-card-body {
-  align-items: center;
-  padding: 0;
-}
-
-.doc-card-import:disabled {
-  cursor: wait;
-  opacity: 0.75;
-}
-
-.doc-card-paste {
-  cursor: text;
-}
-
-.doc-card-paste-input {
-  width: 100%;
-  margin-top: 0.45rem;
-  padding: 0.55rem 0.65rem;
-  border: 1px dashed var(--line-strong);
-  border-radius: 0.55rem;
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
-  color: var(--ink);
-  font-family: var(--font-ui);
-  font-size: 0.82rem;
-  line-height: 1.45;
-  resize: none;
-}
-
-.doc-card-paste-input::placeholder {
-  color: var(--muted);
-}
-
-.doc-card-paste-input:focus {
-  outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  outline-offset: 1px;
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--line-strong));
-}
-
-.doc-card-error {
-  margin-top: 0.35rem;
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: #b42318;
-}
-
 .home-empty {
   margin: 2rem 0 0;
   font-family: var(--font-ui);
@@ -1254,7 +1218,7 @@
 }
 
 .paper-scroll {
-  width: var(--page-width, 210mm);
+  width: min(var(--page-width, 210mm), 100%);
   padding: var(--page-padding, 22mm 18mm);
   zoom: var(--page-scale, 1);
 }
@@ -1292,7 +1256,7 @@
 }
 
 .paper-page {
-  width: var(--page-width, 210mm);
+  width: min(var(--page-width, 210mm), 100%);
   min-height: var(--page-height, 297mm);
   padding: var(--page-padding, 22mm 18mm);
   position: relative;
@@ -1674,10 +1638,6 @@
     width: min(20rem, calc(100vw - 2 * var(--gutter)));
     max-height: min(70vh, 30rem);
     padding: 0.9rem 1rem;
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-card);
     z-index: 30;
     display: none;
   }
@@ -1690,7 +1650,8 @@
 /* Phones */
 @media (max-width: 620px) {
   .home-link span,
-  .toc-toggle span {
+  .toc-toggle span,
+  .home-add-row .home-count {
     display: none;
   }
 
@@ -1726,13 +1687,6 @@
   flex-direction: column;
   gap: 0.35rem;
   padding-bottom: 0.65rem;
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
-  backdrop-filter: blur(28px) saturate(1.25);
-  border: 1px solid color-mix(in srgb, var(--line-strong) 56%, transparent);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.1),
-    0 8px 32px rgba(0, 0, 0, 0.22);
   overflow: hidden;
 }
 
@@ -2426,6 +2380,17 @@
   line-height: 1;
 }
 
+/* On topbar icon buttons the count sits as a small corner badge. */
+.controls .icon-button .comment-count-badge {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  min-width: 1rem;
+  height: 1rem;
+  font-size: 0.58rem;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
 .ghost-button.active {
   background: color-mix(in srgb, var(--surface-raised) 72%, transparent);
   border-color: var(--line-strong);
@@ -2813,11 +2778,6 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 0.35rem;
   margin-top: 0.45rem;
-}
-
-.doc-card-import-drag {
-  border-color: color-mix(in srgb, var(--ink-soft) 55%, var(--line-strong));
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
 }
 
 .pdf-page-error {
@@ -3956,15 +3916,15 @@ body.canvas-zoom-scrub-dragging .reader-root .ink-overlay-canvas {
 
 .reader-root[data-draw-mode='true'] .topbar-shell,
 .reader-root[data-draw-mode='true'] .topbar-shell *,
-.reader-root[data-draw-mode='true'] .draw-toolbar-shell,
-.reader-root[data-draw-mode='true'] .draw-toolbar-shell * {
+.reader-root[data-draw-mode='true'] .present-toolbar-shell,
+.reader-root[data-draw-mode='true'] .present-toolbar-shell * {
   pointer-events: auto;
 }
 
 .reader-root[data-laser-mode='true'] .topbar-shell,
 .reader-root[data-laser-mode='true'] .topbar-shell *,
-.reader-root[data-laser-mode='true'] .laser-toolbar-shell,
-.reader-root[data-laser-mode='true'] .laser-toolbar-shell * {
+.reader-root[data-laser-mode='true'] .present-toolbar-shell,
+.reader-root[data-laser-mode='true'] .present-toolbar-shell * {
   pointer-events: auto;
 }
 
@@ -3973,7 +3933,7 @@ body.laser-pointer-active {
 }
 
 .reader-root[data-laser-mode='true'] .topbar-shell,
-.reader-root[data-laser-mode='true'] .laser-toolbar-shell {
+.reader-root[data-laser-mode='true'] .present-toolbar-shell {
   cursor: auto !important;
 }
 
@@ -3986,25 +3946,13 @@ body.laser-pointer-active {
   pointer-events: none;
 }
 
-.laser-toolbar-label {
-  font-family: var(--font-ui);
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--ink-soft);
-  padding-inline: 0.15rem 0.25rem;
-  white-space: nowrap;
-}
-
-.laser-toolbar {
-  gap: 0.55rem;
-}
-
 /* ================================================================== *
- * Draw toolbar — secondary pill below the main topbar
+ * Presentation cluster — one floating pill, bottom center, shared by
+ * laser and draw so the controls never jump between modes.
  * ================================================================== */
-.draw-toolbar-shell {
+.present-toolbar-shell {
   position: fixed;
-  top: calc(var(--topbar-total) + 0.45rem);
+  bottom: 1.4rem;
   left: 0;
   right: 0;
   z-index: 45;
@@ -4012,22 +3960,48 @@ body.laser-pointer-active {
   pointer-events: none;
   display: flex;
   justify-content: center;
+  animation: present-toolbar-in 200ms cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
-.draw-toolbar {
+@keyframes present-toolbar-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.present-toolbar {
   width: auto;
   min-height: var(--topbar-pill-h);
-  padding-inline: 0.65rem 0.75rem;
+  padding-inline: 0.55rem;
   gap: 0.55rem;
 }
 
-.draw-toolbar-brushes {
+.present-toolbar-tools {
   display: flex;
   align-items: center;
   gap: 0.15rem;
 }
 
-.draw-toolbar-colors {
+.present-tool-button {
+  flex: 0 0 auto;
+}
+
+.present-toolbar .present-clear-button {
+  color: var(--ink-soft);
+  flex: 0 0 auto;
+}
+
+.present-toolbar .present-clear-button:hover {
+  color: var(--ink);
+  background: var(--surface-raised);
+}
+
+.present-toolbar-colors {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -4052,19 +4026,6 @@ body.laser-pointer-active {
     0 0 0 3px var(--swatch-color);
 }
 
-.draw-tool-button {
-  flex: 0 0 auto;
-}
-
-.draw-toolbar .draw-clear-button {
-  color: var(--ink-soft);
-}
-
-.draw-toolbar .draw-clear-button:hover {
-  color: var(--ink);
-  background: var(--surface-raised);
-}
-
 .ink-overlay-interactive {
   pointer-events: auto;
 }
@@ -4079,4 +4040,86 @@ body.laser-pointer-active {
 
 .ink-overlay-panning {
   cursor: grabbing;
+}
+
+/* ================================================================== *
+ * Panel primitive — every floating surface (contents, search, ask,
+ * settings) shares one material: same glass, border, radius, shadow,
+ * and entrance. Individual blocks above only set position + layout.
+ * ================================================================== */
+.toc-panel,
+.search-panel,
+.assistant-panel,
+.settings-popover {
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 55%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.22);
+  animation: panel-in 160ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toc-panel,
+  .search-panel,
+  .assistant-panel,
+  .settings-popover,
+  .present-toolbar-shell {
+    animation: none;
+  }
+}
+
+/* ================================================================== *
+ * Phones — the paper metaphor yields to a fluid column: no fixed page
+ * width, no zoom, no clipped edges.
+ * ================================================================== */
+@media (max-width: 700px) {
+  .paper-scroll,
+  .paper-page {
+    width: 100%;
+    min-height: auto;
+    padding: clamp(1.1rem, 5vw, 1.75rem);
+    zoom: 1;
+  }
+
+  .reader-canvas {
+    padding-top: 1rem;
+  }
+
+  .app-topbar {
+    gap: 0.5rem;
+    padding-inline: 0.5rem;
+  }
+
+  .topbar-lead {
+    gap: 0.45rem;
+  }
+
+  .topbar-lead .topbar-divider {
+    display: none;
+  }
+
+  .controls,
+  .controls-actions {
+    gap: 0.2rem;
+  }
+
+  .search-panel,
+  .assistant-panel {
+    left: var(--gutter);
+    width: auto;
+  }
 }

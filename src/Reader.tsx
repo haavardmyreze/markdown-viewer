@@ -54,11 +54,17 @@ import {
   type DocumentViewMode,
   type PageSize,
 } from './readerConfig'
-import { AskIcon, CommentsIcon, ContentsIcon, SearchIcon } from './ui/icons'
 import { ReaderTopbar, type TopbarAction } from './ui/ReaderTopbar'
+import { useDocumentShell } from './ui/useDocumentShell'
+import {
+  createAskTopbarAction,
+  createCommentsTopbarAction,
+  createPresentTopbarAction,
+  createSearchTopbarAction,
+  createTocTopbarAction,
+} from './ui/topbarActions'
 import { SearchPanel } from './ui/SearchPanel'
 import { ThemePicker } from './ui/ThemePicker'
-import { usePanels } from './ui/usePanels'
 import { CommandPalette } from './ui/CommandPalette'
 import { InkAnnotation } from './ui/InkAnnotation'
 import { LaserPointer } from './ui/LaserPointer'
@@ -67,11 +73,8 @@ import { TocRail } from './ui/TocRail'
 import { Lightbox } from './ui/Lightbox'
 import {
   createDrawPaletteAction,
-  createDrawTopbarAction,
   createLaserPaletteAction,
-  createLaserTopbarAction,
   useMarkdownInkBinding,
-  useReaderDrawMode,
 } from './ui/useReaderInk'
 import { markdownCodeComponents } from './markdown/CodeBlocks'
 import { applyFindHighlights, type FindHighlights } from './markdown/findHighlights'
@@ -295,14 +298,27 @@ function Reader({
     tick: number
   } | null>(null)
 
-  const panels = usePanels()
-  const { closeAll: closeAllPanels, open: openPanel, close: closePanel } = panels
-  const tocOpen = panels.isOpen('toc')
-  const searchOpen = panels.isOpen('search')
-  const commentsOpen = panels.isOpen('comments')
-  const assistantOpen = panels.isOpen('assistant')
-  const { drawMode, laserMode, toggleDrawMode, toggleLaserMode, drawModeRef } =
-    useReaderDrawMode(closeAllPanels)
+  const {
+    panels,
+    closeAllPanels,
+    openPanel,
+    closePanel,
+    tocOpen,
+    searchOpen,
+    commentsOpen,
+    assistantOpen,
+    present,
+  } = useDocumentShell()
+  const {
+    drawMode,
+    laserMode,
+    presentActive,
+    toggleDrawMode,
+    toggleLaserMode,
+    togglePresent,
+    exitPresentationMode,
+    drawModeRef,
+  } = present
 
   const measureHostRef = useRef<HTMLDivElement | null>(null)
   const tocPanelRef = useRef<HTMLElement | null>(null)
@@ -952,42 +968,18 @@ function Reader({
   const pageZoomPercent = Math.round(pageZoom * 100)
 
   const topbarActions: TopbarAction[] = [
-    {
-      id: 'toc',
-      label: 'Contents',
-      icon: <ContentsIcon />,
-      active: tocOpen,
-      onToggle: () => panels.toggle('toc'),
-    },
-    {
-      id: 'search',
-      label: 'Search',
-      icon: <SearchIcon />,
-      active: searchOpen || Boolean(trimmedSearchQuery),
-      onToggle: () => {
-        panels.toggle('search')
-        if (!searchOpen) {
-          focusSearchInput()
-        }
-      },
-    },
-    {
-      id: 'comments',
-      label: 'Comments',
-      icon: <CommentsIcon />,
-      active: commentsOpen,
-      badge: comments.length || undefined,
-      onToggle: () => panels.toggle('comments'),
-    },
-    {
-      id: 'assistant',
-      label: 'Ask',
-      icon: <AskIcon />,
-      active: assistantOpen,
-      onToggle: () => panels.toggle('assistant'),
-    },
-    createDrawTopbarAction(drawMode, toggleDrawMode),
-    createLaserTopbarAction(laserMode, toggleLaserMode),
+    createTocTopbarAction(tocOpen, () => panels.toggle('toc')),
+    createSearchTopbarAction(searchOpen || Boolean(trimmedSearchQuery), () => {
+      panels.toggle('search')
+      if (!searchOpen) {
+        focusSearchInput()
+      }
+    }),
+    createCommentsTopbarAction(commentsOpen, comments.length, () =>
+      panels.toggle('comments'),
+    ),
+    createAskTopbarAction(assistantOpen, () => panels.toggle('assistant')),
+    createPresentTopbarAction(presentActive, togglePresent),
   ]
 
   const settingsContent = (
@@ -1202,8 +1194,19 @@ function Reader({
       data-laser-mode={laserMode ? 'true' : undefined}
     >
       <CommandPalette groups={paletteGroups} onAskQuery={askQuery} />
-      <InkAnnotation docKey={docKey} drawMode={drawMode} laserMode={laserMode} {...inkBinding} />
-      <LaserPointer active={laserMode} />
+      <InkAnnotation
+        docKey={docKey}
+        drawMode={drawMode}
+        laserMode={laserMode}
+        onSwitchToLaser={toggleLaserMode}
+        onExit={exitPresentationMode}
+        {...inkBinding}
+      />
+      <LaserPointer
+        active={laserMode}
+        onSwitchToDraw={toggleDrawMode}
+        onExit={exitPresentationMode}
+      />
       <SelectionMenu
         scopeRef={docColRef}
         disabled={commentsOpen || drawMode}
@@ -1228,9 +1231,11 @@ function Reader({
       <Lightbox scopeRef={docColRef} />
       <ReaderTopbar
         fileName={fileName}
+        displayName={toc.find((entry) => entry.level === 1)?.text}
         onHome={onHome}
         actions={topbarActions}
         settings={settingsContent}
+        receded={presentActive}
       />
 
       <DocAssistant

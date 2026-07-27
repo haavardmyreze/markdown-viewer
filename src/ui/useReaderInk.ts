@@ -1,4 +1,4 @@
-import { createElement, useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { Dispatch, RefObject, SetStateAction } from 'react'
 import {
   wheelZoomDelta,
@@ -9,8 +9,6 @@ import { clampPageZoom } from '../readerConfig'
 import {
   nextCanvasWheelZoom,
 } from '../canvas/canvasZoom'
-import { DrawIcon, LaserIcon } from './icons'
-import type { TopbarAction } from './ReaderTopbar'
 import {
   codeInkLayerKey,
   csvInkLayerKey,
@@ -115,8 +113,10 @@ export function useReaderDrawMode(onActivate?: () => void) {
   const {
     drawMode,
     laserMode,
+    presentActive,
     toggleDrawMode,
     toggleLaserMode,
+    togglePresent,
     exitPresentationMode,
     setDrawMode,
   } = usePresentationMode(onActivate)
@@ -134,8 +134,10 @@ export function useReaderDrawMode(onActivate?: () => void) {
   return {
     drawMode,
     laserMode,
+    presentActive,
     toggleDrawMode,
     toggleLaserMode,
+    togglePresent,
     exitDrawMode: exitPresentationMode,
     exitPresentationMode,
     setDrawMode,
@@ -223,31 +225,6 @@ export function useCsvInkBinding(
   }
 }
 
-export function createDrawTopbarAction(
-  drawMode: boolean,
-  toggleDrawMode: () => void,
-): TopbarAction {
-  return {
-    id: 'draw',
-    label: 'Draw',
-    icon: createElement(DrawIcon),
-    active: drawMode,
-    onToggle: toggleDrawMode,
-  }
-}
-
-export function createLaserTopbarAction(
-  laserMode: boolean,
-  toggleLaserMode: () => void,
-): TopbarAction {
-  return {
-    id: 'laser',
-    label: 'Laser',
-    icon: createElement(LaserIcon),
-    active: laserMode,
-    onToggle: toggleLaserMode,
-  }
-}
 
 export function createDrawPaletteAction(toggleDrawMode: () => void) {
   return {

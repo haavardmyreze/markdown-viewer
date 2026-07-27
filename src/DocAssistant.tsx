@@ -702,11 +702,6 @@ function DocAssistant({
       {showSetup ? (
         <div className="assistant-setup-popover">
           <p className="assistant-setup-status">{connectionLabel}</p>
-          <div className="assistant-context-info">
-            <span className="assistant-context-label">Document context</span>
-            <p className="assistant-context-summary">{contextInfo.summary}</p>
-            <p className="assistant-context-detail">{contextInfo.detail}</p>
-          </div>
 
           <div className="assistant-provider-toggle" role="group" aria-label="AI provider">
             <button
@@ -833,6 +828,12 @@ function DocAssistant({
               </p>
             </>
           )}
+
+          <div className="assistant-context-info">
+            <span className="assistant-context-label">Document context</span>
+            <p className="assistant-context-summary">{contextInfo.summary}</p>
+            <p className="assistant-context-detail">{contextInfo.detail}</p>
+          </div>
         </div>
       ) : null}
 

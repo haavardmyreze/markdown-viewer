@@ -20,6 +20,7 @@ import { getLibraryDoc, type LibraryDoc } from './library'
 import { formatRecentFormatLabel, formatRecentOpenedAgo, type RecentDocument } from './recentDocuments'
 import { type Theme, type ThemePreference } from './theme'
 import { DocumentFormatPreview } from './ui/DocumentFormatPreview'
+import { loadDocumentThumbnail } from './ui/documentThumbnails'
 import { readClipboardImageFile } from './ui/clipboardImage'
 import { ClipboardIcon, PlusIcon, SettingsIcon } from './ui/icons'
 import { CommandPalette } from './ui/CommandPalette'
@@ -145,7 +146,7 @@ function Home({
       <div className="topbar-shell home-topbar-shell">
         <div className="home-topbar-row">
           <div className="home-brand">
-            <p className="eyebrow">Markdown Viewer</p>
+            <p className="eyebrow">Quiet Reader</p>
             <h1>Library</h1>
           </div>
           <header className="app-topbar topbar-pill home-header">
@@ -159,83 +160,76 @@ function Home({
       <section className="home-body">
         <div className="home-section-head">
           <h2>Documents</h2>
-          <span className="home-count">
-            {homeDocuments.length}{' '}
-            {homeDocuments.length === 1 ? 'document' : 'documents'}
-          </span>
-        </div>
+          <div className="home-add-row">
+            <label
+              className={
+                importDragOver
+                  ? 'home-add-button home-add-button-drag'
+                  : 'home-add-button'
+              }
+              title="Open a file from disk — or drag one anywhere on screen"
+              onDragEnter={(event) => {
+                event.preventDefault()
+                setImportDragOver(true)
+              }}
+              onDragOver={(event) => {
+                event.preventDefault()
+                event.dataTransfer.dropEffect = 'copy'
+                setImportDragOver(true)
+              }}
+              onDragLeave={(event) => {
+                if (event.currentTarget.contains(event.relatedTarget as Node)) {
+                  return
+                }
+                setImportDragOver(false)
+              }}
+              onDrop={(event) => {
+                event.preventDefault()
+                setImportDragOver(false)
+                const file = event.dataTransfer.files?.[0]
+                if (file) {
+                  void onImportFile(file)
+                }
+              }}
+            >
+              <PlusIcon size={16} strokeWidth={2} />
+              <span>{importDragOver ? 'Drop to open' : 'Import'}</span>
+              <input type="file" accept={importAcceptString()} onChange={onImport} />
+            </label>
 
-        <div className="doc-grid">
-          <label
-            className="doc-card doc-card-import doc-card-paste"
-            onClick={() => pasteInputRef.current?.focus()}
-          >
-            <div className="doc-card-import-icon" aria-hidden="true">
-              <ClipboardIcon />
-            </div>
-            <div className="doc-card-body">
-              <span className="doc-card-title">Paste from clipboard</span>
+            <button
+              type="button"
+              className="home-add-button"
+              title="Paste text, code, or an image (⌘V / Ctrl+V)"
+              onClick={() => pasteInputRef.current?.focus()}
+            >
+              <ClipboardIcon size={16} strokeWidth={2} />
+              <span>Paste</span>
               <textarea
                 ref={pasteInputRef}
-                className="doc-card-paste-input"
-                rows={2}
-                placeholder="Click here, then press Ctrl+V (or ⌘V) to paste text, code, or an image"
+                className="home-paste-input"
+                rows={1}
+                tabIndex={-1}
                 aria-label="Paste markdown, code, or an image from clipboard"
                 onPaste={handleClipboardPaste}
                 onChange={() => setClipboardError(null)}
               />
-              {clipboardError ? (
-                <span className="doc-card-error" role="alert">
-                  {clipboardError}
-                </span>
-              ) : null}
-            </div>
-          </label>
+            </button>
 
-          <label
-            className={
-              importDragOver
-                ? 'doc-card doc-card-import doc-card-import-drag'
-                : 'doc-card doc-card-import'
-            }
-            onDragEnter={(event) => {
-              event.preventDefault()
-              setImportDragOver(true)
-            }}
-            onDragOver={(event) => {
-              event.preventDefault()
-              event.dataTransfer.dropEffect = 'copy'
-              setImportDragOver(true)
-            }}
-            onDragLeave={(event) => {
-              if (event.currentTarget.contains(event.relatedTarget as Node)) {
-                return
-              }
-              setImportDragOver(false)
-            }}
-            onDrop={(event) => {
-              event.preventDefault()
-              setImportDragOver(false)
-              const file = event.dataTransfer.files?.[0]
-              if (file) {
-                void onImportFile(file)
-              }
-            }}
-          >
-            <div className="doc-card-import-icon" aria-hidden="true">
-              <PlusIcon />
-            </div>
-            <div className="doc-card-body">
-              <span className="doc-card-title">Import from disk</span>
-              <span className="doc-card-excerpt">
-                {importDragOver
-                  ? 'Drop your file here'
-                  : 'Open a file from disk, or drag one anywhere on screen.'}
-              </span>
-            </div>
-            <input type="file" accept={importAcceptString()} onChange={onImport} />
-          </label>
+            <span className="home-count">
+              {homeDocuments.length}{' '}
+              {homeDocuments.length === 1 ? 'document' : 'documents'}
+            </span>
+          </div>
+        </div>
 
+        {clipboardError ? (
+          <p className="home-import-error" role="alert">
+            {clipboardError}
+          </p>
+        ) : null}
+
+        <div className="doc-grid">
           {homeDocuments.map((item) => {
             const libraryDoc = homeDocumentLibraryDoc(item, getLibraryDoc)
             const title = homeDocumentTitle(item, getLibraryDoc)
@@ -256,6 +250,7 @@ function Home({
                 key={item.key}
                 type="button"
                 className={isActive ? 'doc-card doc-card-active' : 'doc-card'}
+                aria-label={`Open ${title}`}
                 onClick={() => {
                   if (item.source === 'recent') {
                     void onOpenRecent(item.entry)
@@ -265,7 +260,11 @@ function Home({
                   onOpen(item.doc)
                 }}
               >
-                <DocumentFormatPreview format={format} title={title} />
+                <DocumentFormatPreview
+                  format={format}
+                  title={title}
+                  thumbnail={loadDocumentThumbnail(docKey)}
+                />
                 <div className="doc-card-body">
                   <span className="doc-card-title">{title}</span>
                   {excerpt ? (
@@ -312,9 +311,8 @@ function Home({
 
         {homeDocuments.length === 0 ? (
           <p className="home-empty">
-            No library documents yet. Add <code>.md</code> files to{' '}
-            <code>markdown-viewer/library/</code>, import one from disk, or paste
-            text or an image from clipboard.
+            Nothing here yet. Import a document, paste from clipboard, or drop a
+            file anywhere — Markdown, PDF, CSV, images, and code all work.
           </p>
         ) : null}
       </section>
