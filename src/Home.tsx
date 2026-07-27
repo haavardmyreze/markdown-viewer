@@ -1,7 +1,7 @@
 import {
   type ChangeEvent,
-  type ClipboardEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -21,7 +21,7 @@ import { formatRecentFormatLabel, formatRecentOpenedAgo, type RecentDocument } f
 import { type Theme, type ThemePreference } from './theme'
 import { DocumentFormatPreview } from './ui/DocumentFormatPreview'
 import { loadDocumentThumbnail } from './ui/documentThumbnails'
-import { readClipboardImageFile } from './ui/clipboardImage'
+import { readClipboardContents, readClipboardImageFile } from './ui/clipboardImage'
 import { ClipboardIcon, PlusIcon, SettingsIcon } from './ui/icons'
 import { CommandPalette } from './ui/CommandPalette'
 import { libraryPaletteGroup, themePaletteGroup } from './ui/paletteGroups'
@@ -90,8 +90,8 @@ function Home({
   onImportFile,
   onImportFromClipboard,
 }: HomeProps) {
-  const pasteInputRef = useRef<HTMLTextAreaElement | null>(null)
   const [clipboardError, setClipboardError] = useState<string | null>(null)
+  const [awaitingPaste, setAwaitingPaste] = useState(false)
   const [importDragOver, setImportDragOver] = useState(false)
 
   const homeDocuments = useMemo(
@@ -104,39 +104,88 @@ function Home({
     themePaletteGroup(themePreference, onSelectTheme),
   ]
 
-  const handleClipboardPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
-    event.preventDefault()
-    setClipboardError(null)
-
-    const imageFile = readClipboardImageFile(event.clipboardData)
-    if (imageFile) {
-      void Promise.resolve(onImportFile(imageFile)).catch((error: unknown) => {
+  const openClipboardImage = useCallback(
+    (file: File) => {
+      setAwaitingPaste(false)
+      void Promise.resolve(onImportFile(file)).catch((error: unknown) => {
         setClipboardError(
           error instanceof Error ? error.message : 'Could not open pasted image.',
         )
       })
-      if (pasteInputRef.current) {
-        pasteInputRef.current.value = ''
+    },
+    [onImportFile],
+  )
+
+  const openClipboardText = useCallback(
+    (content: string) => {
+      setAwaitingPaste(false)
+      try {
+        onImportFromClipboard(content)
+      } catch (error) {
+        setClipboardError(
+          error instanceof Error ? error.message : 'Could not open pasted content.',
+        )
       }
-      return
+    },
+    [onImportFromClipboard],
+  )
+
+  // ⌘V anywhere on the library opens the clipboard — the same "just do it"
+  // affordance as dropping a file anywhere on the window.
+  useEffect(() => {
+    const onPaste = (event: globalThis.ClipboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.isContentEditable || target instanceof HTMLInputElement) {
+        return
+      }
+
+      const data = event.clipboardData
+      if (!data) {
+        return
+      }
+
+      const imageFile = readClipboardImageFile(data)
+      if (imageFile) {
+        event.preventDefault()
+        setClipboardError(null)
+        openClipboardImage(imageFile)
+        return
+      }
+
+      const content = data.getData('text/plain')
+      if (content.trim()) {
+        event.preventDefault()
+        setClipboardError(null)
+        openClipboardText(content)
+      }
     }
 
-    const content = event.clipboardData.getData('text/plain')
-    if (!content.trim()) {
-      setClipboardError('Clipboard is empty.')
-      return
-    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [openClipboardImage, openClipboardText])
+
+  // One click should paste. Where the browser allows reading the clipboard
+  // directly this opens immediately; otherwise we ask for a real ⌘V, which
+  // the listener above catches.
+  const handlePasteClick = async () => {
+    setClipboardError(null)
 
     try {
-      onImportFromClipboard(content)
-    } catch (error) {
-      setClipboardError(
-        error instanceof Error ? error.message : 'Could not open pasted content.',
-      )
-    } finally {
-      if (pasteInputRef.current) {
-        pasteInputRef.current.value = ''
+      const contents = await readClipboardContents()
+
+      if (contents.kind === 'image') {
+        openClipboardImage(contents.file)
+        return
       }
+
+      if (contents.kind === 'text') {
+        openClipboardText(contents.content)
+        return
+      }
+
+      setClipboardError('Clipboard is empty.')
+    } catch {
+      setAwaitingPaste(true)
     }
   }
 
@@ -199,21 +248,12 @@ function Home({
 
             <button
               type="button"
-              className="home-add-button"
-              title="Paste text, code, or an image (⌘V / Ctrl+V)"
-              onClick={() => pasteInputRef.current?.focus()}
+              className={awaitingPaste ? 'home-add-button awaiting-paste' : 'home-add-button'}
+              title="Open text, code, or an image from the clipboard"
+              onClick={() => void handlePasteClick()}
             >
               <ClipboardIcon size={16} strokeWidth={2} />
-              <span>Paste</span>
-              <textarea
-                ref={pasteInputRef}
-                className="home-paste-input"
-                rows={1}
-                tabIndex={-1}
-                aria-label="Paste markdown, code, or an image from clipboard"
-                onPaste={handleClipboardPaste}
-                onChange={() => setClipboardError(null)}
-              />
+              <span>{awaitingPaste ? 'Press ⌘V' : 'Paste'}</span>
             </button>
 
             <span className="home-count">

@@ -49,6 +49,51 @@ export function readClipboardImageFile(dataTransfer: DataTransfer): File | null 
   return null
 }
 
+export type ClipboardContents =
+  | { kind: 'image'; file: File }
+  | { kind: 'text'; content: string }
+  | { kind: 'empty' }
+
+/**
+ * Read the clipboard directly, so a single click can paste. Rejects when the
+ * browser has no async clipboard read or the user denies permission — callers
+ * fall back to asking for a real ⌘V, which needs no permission.
+ */
+export async function readClipboardContents(): Promise<ClipboardContents> {
+  if (navigator.clipboard?.read) {
+    const items = await navigator.clipboard.read()
+
+    for (const item of items) {
+      const imageType = item.types.find((type) => type.startsWith('image/'))
+      if (imageType) {
+        const blob = await item.getType(imageType)
+        return {
+          kind: 'image',
+          file: new File([blob], clipboardImageFileName(imageType), {
+            type: imageType,
+          }),
+        }
+      }
+    }
+
+    for (const item of items) {
+      if (item.types.includes('text/plain')) {
+        const content = await (await item.getType('text/plain')).text()
+        return content.trim() ? { kind: 'text', content } : { kind: 'empty' }
+      }
+    }
+
+    return { kind: 'empty' }
+  }
+
+  if (navigator.clipboard?.readText) {
+    const content = await navigator.clipboard.readText()
+    return content.trim() ? { kind: 'text', content } : { kind: 'empty' }
+  }
+
+  throw new Error('Clipboard read is not available.')
+}
+
 export async function writeCanvasToClipboard(canvas: HTMLCanvasElement) {
   if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
     throw new Error('Image copy is not supported in this browser.')

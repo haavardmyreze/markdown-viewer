@@ -812,16 +812,11 @@
   cursor: pointer;
 }
 
-/* Invisible paste target: focused on click so ⌘V lands here. */
-.home-paste-input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  border: 0;
-  resize: none;
-  cursor: pointer;
+/* Waiting for a real ⌘V because the browser blocks direct clipboard reads. */
+.home-add-button.awaiting-paste {
+  border-color: var(--ink-soft);
+  color: var(--ink);
+  background: var(--surface-raised);
 }
 
 .home-import-error {
