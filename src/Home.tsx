@@ -18,7 +18,7 @@ import {
 } from './homeDocuments'
 import { getLibraryDoc, type LibraryDoc } from './library'
 import { formatRecentFormatLabel, formatRecentOpenedAgo, type RecentDocument } from './recentDocuments'
-import { type Theme, type ThemePreference } from './theme'
+import { type ThemePreference } from './theme'
 import { DocumentFormatPreview } from './ui/DocumentFormatPreview'
 import { loadDocumentThumbnail } from './ui/documentThumbnails'
 import { readClipboardContents, readClipboardImageFile } from './ui/clipboardImage'
@@ -33,7 +33,6 @@ type HomeProps = {
   docs: LibraryDoc[]
   recentDocs: RecentDocument[]
   activeDocId: string
-  theme: Theme
   themePreference: ThemePreference
   onSelectTheme: (preference: ThemePreference) => void
   onOpen: (doc: LibraryDoc) => void
@@ -81,7 +80,6 @@ function Home({
   docs,
   recentDocs,
   activeDocId,
-  theme,
   themePreference,
   onSelectTheme,
   onOpen,
@@ -190,7 +188,7 @@ function Home({
   }
 
   return (
-    <main className="home-shell" data-theme={theme}>
+    <main className="home-shell">
       <CommandPalette groups={paletteGroups} />
       <div className="topbar-shell home-topbar-shell">
         <div className="home-topbar-row">

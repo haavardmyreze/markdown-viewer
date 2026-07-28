@@ -231,7 +231,6 @@ function App() {
           docs={libraryDocs}
           recentDocs={recentDocs}
           activeDocId={lastOpenedId()}
-          theme={theme}
           themePreference={themePreference}
           onSelectTheme={setThemePreference}
           onOpen={openLibraryDoc}

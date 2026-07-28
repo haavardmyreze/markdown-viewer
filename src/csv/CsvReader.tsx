@@ -24,7 +24,6 @@ import { ReaderTopbar, type TopbarAction } from '../ui/ReaderTopbar'
 import { useDocumentShell } from '../ui/useDocumentShell'
 import { SearchPanel } from '../ui/SearchPanel'
 import { ThemePicker } from '../ui/ThemePicker'
-import { useReaderPageTheme } from '../ui/useReaderPageTheme'
 import { CommandPalette } from '../ui/CommandPalette'
 import { InkAnnotation } from '../ui/InkAnnotation'
 import { LaserPointer } from '../ui/LaserPointer'
@@ -130,8 +129,6 @@ export default function CsvReader({
     exitPresentationMode,
     drawModeRef,
   } = present
-
-  useReaderPageTheme(theme)
 
   const index = useMemo(() => buildCsvDocumentIndex(csvContent), [csvContent])
 

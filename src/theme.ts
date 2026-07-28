@@ -93,3 +93,12 @@ export function paletteFor(preference: ThemePreference, systemDark: boolean): Th
     preference.mode === 'dark' || (preference.mode === 'system' && systemDark)
   return dark ? DARK_PALETTES[preference.base] : preference.base
 }
+
+export type Room = 'day' | 'night'
+
+/** Whether the app chrome ("room") should be light or dark, independent of the paper theme. */
+export function roomFor(preference: ThemePreference, systemDark: boolean): Room {
+  const dark =
+    preference.mode === 'dark' || (preference.mode === 'system' && systemDark)
+  return dark ? 'night' : 'day'
+}

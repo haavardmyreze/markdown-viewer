@@ -45,7 +45,6 @@ import {
   useCodeInkBinding,
 } from '../ui/useReaderInk'
 import { actionsPaletteGroup, libraryPaletteGroup, themePaletteGroup } from '../ui/paletteGroups'
-import { useReaderPageTheme } from '../ui/useReaderPageTheme'
 import type { LibraryDoc } from '../library'
 import { normalizePastedText } from '../text/normalizeLineBreaks'
 import { detectCodeLanguage, formatLanguageLabel } from './detectLanguage'
@@ -111,8 +110,6 @@ export default function CodeReader({
     drawModeRef,
   } = present
   const inkBinding = useCodeInkBinding(docColRef, pageZoom)
-
-  useReaderPageTheme(theme)
 
   const displayContent = useMemo(() => {
     if (!fileName.startsWith('clipboard.')) {

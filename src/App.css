@@ -1,3 +1,8 @@
+:focus-visible {
+  outline: 2px solid var(--room-accent);
+  outline-offset: 2px;
+}
+
 .eyebrow {
   font-family: var(--font-ui);
   text-transform: uppercase;
@@ -158,9 +163,9 @@
 }
 
 .icon-button.active {
-  color: var(--ink);
-  background: var(--surface-raised);
-  border-color: color-mix(in srgb, var(--line-strong) 70%, transparent);
+  color: var(--room-accent);
+  background: color-mix(in srgb, var(--room-accent) 12%, transparent);
+  border-color: transparent;
 }
 
 /* Contents toggle only appears on narrow screens (see media query). */
@@ -388,20 +393,20 @@
 .search-result mark,
 .search-result-title mark,
 .search-result-snippet mark {
-  background: color-mix(in srgb, #f5d565 48%, transparent);
+  background: color-mix(in srgb, var(--highlight) 48%, transparent);
   color: inherit;
   border-radius: 3px;
   padding: 0.01em 0.12em;
 }
 
 .search-flash-highlight {
-  background: color-mix(in srgb, #f5d565 78%, var(--content-highlight));
+  background: color-mix(in srgb, var(--highlight) 78%, var(--content-highlight));
   color: inherit;
   border-radius: 3px;
   padding: 0.02em 0.15em;
   box-shadow:
-    0 0 0 1px color-mix(in srgb, #d9a400 40%, transparent),
-    0 0 0 4px color-mix(in srgb, #f5d565 20%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--highlight-strong) 40%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--highlight) 20%, transparent);
 }
 
 .toc-panel nav {
@@ -444,7 +449,7 @@
 }
 
 .toc-link.active {
-  color: var(--ink);
+  color: var(--room-accent);
   opacity: 1;
   background: var(--surface-raised);
 }
@@ -457,7 +462,7 @@
 
 .toc-l1.active,
 .toc-l1.active-chapter {
-  color: var(--ink-soft);
+  color: var(--room-accent);
   opacity: 1;
   background: var(--surface);
 }
@@ -814,15 +819,15 @@
 
 /* Waiting for a real ⌘V because the browser blocks direct clipboard reads. */
 .home-add-button.awaiting-paste {
-  border-color: var(--ink-soft);
-  color: var(--ink);
-  background: var(--surface-raised);
+  border-color: var(--room-accent);
+  color: var(--room-accent);
+  background: color-mix(in srgb, var(--room-accent) 10%, transparent);
 }
 
 .home-import-error {
   font-family: var(--font-ui);
   font-size: var(--text-md);
-  color: #e5484d;
+  color: var(--status-danger);
   margin: -0.5rem 0 1rem;
 }
 
@@ -1067,11 +1072,6 @@
   box-shadow: var(--shadow-card);
 }
 
-.doc-card:focus-visible {
-  outline: 2px solid var(--ink-soft);
-  outline-offset: 2px;
-}
-
 .doc-card-active {
   border-color: var(--ink-soft);
 }
@@ -1159,7 +1159,7 @@
 }
 
 .doc-card-folder {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
   padding: 0.05rem 0.35rem;
   border-radius: 5px;
@@ -1177,8 +1177,8 @@
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--surface-raised) 85%, transparent);
-  border: 1px solid var(--line-strong);
-  color: var(--ink-soft);
+  border: 1px solid color-mix(in srgb, var(--room-accent) 45%, transparent);
+  color: var(--room-accent);
   backdrop-filter: blur(4px);
 }
 
@@ -1191,7 +1191,7 @@
 }
 
 .home-empty code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.82em;
   padding: 0.05em 0.3em;
   border-radius: 5px;
@@ -1418,7 +1418,7 @@
 
 .paper-scroll code,
 .paper-page code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
 }
 
 /* Inline code (not inside a fenced block) gets a subtle chip. */
@@ -1470,7 +1470,7 @@
 
 .paper-scroll kbd,
 .paper-page kbd {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.82em;
   background: var(--content-code-bg);
   border: 1px solid var(--content-line);
@@ -1732,11 +1732,11 @@
 }
 
 .assistant-conn-dot-ok {
-  background: #6dbf8a;
+  background: var(--status-ok);
 }
 
 .assistant-conn-dot-error {
-  background: #d48484;
+  background: var(--status-danger);
 }
 
 .assistant-setup-popover {
@@ -1879,7 +1879,7 @@
 }
 
 .assistant-hint code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.92em;
 }
 
@@ -1941,7 +1941,7 @@
 }
 
 .assistant-setup-steps code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
   color: var(--ink);
   background: color-mix(in srgb, var(--bg) 28%, transparent);
@@ -2079,7 +2079,7 @@
 }
 
 .assistant-message-body code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.82em;
   background: color-mix(in srgb, var(--line) 28%, transparent);
   padding: 0.1em 0.35em;
@@ -2252,10 +2252,10 @@
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   line-height: 1.4;
-  color: #e8a0a0;
+  color: var(--status-danger);
   border-radius: var(--radius-control);
   background: color-mix(in srgb, #5a2020 28%, transparent);
-  border: 1px solid color-mix(in srgb, #d48484 25%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-danger) 25%, transparent);
 }
 
 .assistant-form {
@@ -2336,16 +2336,16 @@
 }
 
 .assistant-context-meter-fill {
-  stroke: #6dbf8a;
+  stroke: var(--status-ok);
   transition: stroke-dashoffset 180ms ease, stroke 180ms ease;
 }
 
 .assistant-context-meter-medium .assistant-context-meter-fill {
-  stroke: #c9b458;
+  stroke: var(--status-warn);
 }
 
 .assistant-context-meter-high .assistant-context-meter-fill {
-  stroke: #d48484;
+  stroke: var(--status-danger);
 }
 
 .assistant-context-meter-value {
@@ -2395,7 +2395,7 @@
 .paper-scroll mark.comment-highlight,
 .paper-page mark.comment-highlight,
 .paper-card mark.comment-highlight {
-  background: color-mix(in srgb, #f5d565 58%, var(--content-highlight));
+  background: color-mix(in srgb, var(--highlight) 58%, var(--content-highlight));
   color: inherit;
   padding: 0.05em 0.15em;
   border-radius: 3px;
@@ -2409,8 +2409,8 @@
 .paper-scroll mark.comment-highlight.active,
 .paper-page mark.comment-highlight.active,
 .paper-card mark.comment-highlight.active {
-  background: color-mix(in srgb, #f5d565 82%, var(--content-highlight));
-  box-shadow: 0 0 0 2px color-mix(in srgb, #d9a400 28%, transparent);
+  background: color-mix(in srgb, var(--highlight) 82%, var(--content-highlight));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--highlight-strong) 28%, transparent);
 }
 
 .comment-connectors-fixed {
@@ -2425,14 +2425,14 @@
 
 .comment-connectors-fixed path {
   fill: none;
-  stroke: color-mix(in srgb, #d9a400 55%, var(--line-strong));
+  stroke: color-mix(in srgb, var(--highlight-strong) 55%, var(--line-strong));
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .comment-connectors-fixed path.active {
-  stroke: color-mix(in srgb, #d9a400 88%, var(--ink));
+  stroke: color-mix(in srgb, var(--highlight-strong) 88%, var(--ink));
   stroke-width: 2;
 }
 
@@ -2515,9 +2515,9 @@
 
 .comment-rail-card.active,
 .comment-rail-card.draft {
-  border-color: color-mix(in srgb, #d9a400 55%, var(--line-strong));
+  border-color: color-mix(in srgb, var(--highlight-strong) 55%, var(--line-strong));
   box-shadow:
-    0 0 0 1px color-mix(in srgb, #d9a400 20%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--highlight-strong) 20%, transparent),
     var(--shadow-card);
 }
 
@@ -2642,7 +2642,7 @@
 }
 
 .comment-action.danger {
-  color: #b85c5c;
+  color: var(--status-danger);
 }
 
 @media (max-width: 620px) {
@@ -2934,7 +2934,7 @@
 }
 
 .csv-cell-active {
-  outline: 2px solid color-mix(in srgb, var(--accent) 70%, white);
+  outline: 2px solid color-mix(in srgb, var(--room-accent) 70%, white);
   outline-offset: -2px;
 }
 
@@ -3562,7 +3562,7 @@
   overflow: visible;
   background: transparent;
   border: 0;
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(--font-mono);
   font-size: calc(0.82rem * var(--type-scale, 1));
   line-height: 1.55;
   tab-size: 2;
@@ -3805,7 +3805,7 @@ mark.find-highlight.find-current {
 }
 
 .link-preview-body code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
 }
 
 .link-preview-body img {

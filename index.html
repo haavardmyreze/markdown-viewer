@@ -4,6 +4,21 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('mdv-theme') || '';
+          var parts = raw.split(':');
+          var darkOf = { slate: 'graphite', notion: 'stone', nord: 'ash', sepia: 'sepia-night', ink: 'ink-night' };
+          var base = Object.prototype.hasOwnProperty.call(darkOf, parts[0]) ? parts[0] : 'slate';
+          var mode = parts[1] === 'dark' || parts[1] === 'system' ? parts[1] : 'light';
+          var sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var dark = mode === 'dark' || (mode === 'system' && sysDark);
+          document.documentElement.setAttribute('data-theme', dark ? darkOf[base] : base);
+          document.documentElement.setAttribute('data-room', dark ? 'night' : 'day');
+        } catch (e) { /* storage unavailable — :root defaults apply */ }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

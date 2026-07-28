@@ -27,6 +27,17 @@
   --content-table-head: #e8f0f8;
   --content-highlight: #f4efe2;
 
+  /* The reading lamp: the paper's accent, dimmed for chrome. */
+  --room-accent: color-mix(in oklab, var(--content-accent) 60%, var(--ink-soft));
+
+  /* Status + highlight + mono (previously hard-coded) */
+  --status-ok: #6dbf8a;
+  --status-warn: #c9b458;
+  --status-danger: #d48484;
+  --highlight: #f5d565;
+  --highlight-strong: #d9a400;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+
   /* Literata is self-hosted (fontsource) so every OS sees the same face. */
   --font-display: 'Literata Variable', 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Times New Roman', serif;
   --font-body: 'Literata Variable', 'Charter', 'Georgia', 'Times New Roman', serif;

@@ -48,7 +48,6 @@ import {
 import type { LibraryDoc } from '../library'
 import type { ToneMappingType } from 'hdrify'
 import { decodeImageBuffer, type DecodedImage } from './decodeImage'
-import { useReaderPageTheme } from '../ui/useReaderPageTheme'
 import { imageSheetLayout, imageStrokeUnitScale } from './imageSheetLayout'
 import { writeCanvasToClipboard } from '../ui/clipboardImage'
 import { compositeImageWithSheetInk } from '../ui/exportInkComposite'
@@ -104,7 +103,6 @@ export default function ImageReader({
   )
   const strokeUnitScale = imageStrokeUnitScale(sheetLayout)
 
-  useReaderPageTheme(theme)
   const {
     drawMode,
     laserMode,

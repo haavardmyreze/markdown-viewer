@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { withViewTransition } from './viewTransition'
 import {
   DEFAULT_THEME_PREFERENCE,
   paletteFor,
   resolveThemePreference,
+  roomFor,
   serializeThemePreference,
   type Theme,
   type ThemePreference,
@@ -59,6 +60,17 @@ export function useTheme(): {
     () => paletteFor(themePreference, systemDark),
     [themePreference, systemDark],
   )
+  const room = roomFor(themePreference, systemDark)
+
+  // Single owner of html-level theming. useLayoutEffect (not useEffect) so the
+  // attribute swap commits synchronously inside flushSync — i.e. inside the
+  // startViewTransition callback — otherwise the page background change
+  // escapes the crossfade snapshot.
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    root.setAttribute('data-theme', theme)
+    root.setAttribute('data-room', room)
+  }, [theme, room])
 
   return { themePreference, theme, setThemePreference }
 }

@@ -3,6 +3,7 @@ import {
   DEFAULT_THEME_PREFERENCE,
   paletteFor,
   resolveThemePreference,
+  roomFor,
   serializeThemePreference,
   THEME_BASES,
 } from './theme'
@@ -50,5 +51,17 @@ describe('paletteFor', () => {
   it('follows the system in system mode', () => {
     expect(paletteFor({ base: 'nord', mode: 'system' }, true)).toBe('ash')
     expect(paletteFor({ base: 'nord', mode: 'system' }, false)).toBe('nord')
+  })
+})
+
+describe('roomFor', () => {
+  it('is day in light mode and night in dark mode, for any base', () => {
+    expect(roomFor({ base: 'slate', mode: 'light' }, true)).toBe('day')
+    expect(roomFor({ base: 'sepia', mode: 'dark' }, false)).toBe('night')
+  })
+
+  it('follows the system in system mode', () => {
+    expect(roomFor({ base: 'ink', mode: 'system' }, true)).toBe('night')
+    expect(roomFor({ base: 'ink', mode: 'system' }, false)).toBe('day')
   })
 })
