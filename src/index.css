@@ -33,10 +33,26 @@
   --font-ui: Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   /* Layout + shape tokens (shared across all themes) */
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 18px;
   --paper-radius: 6px;
+  /* Shape scale: paper 6 / controls 10 / cards+panels 16 / capsule */
+  --radius-control: 10px;
+  --radius-card: 16px;
+
+  /* Spacing scale (4px grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* UI type scale */
+  --text-xs: 0.6875rem;   /* 11px — labels, badges, kbd */
+  --text-sm: 0.78rem;     /* 12.5px — meta, hints, secondary */
+  --text-md: 0.875rem;    /* 14px — controls, body UI */
+  --text-base: 1rem;      /* 16px — titles, inputs */
+  --text-lg: 1.3125rem;   /* 21px — page headings */
   --reader-max: 1180px;
   --home-max: 1080px;
   --toc-width: clamp(190px, 15vw, 236px);
