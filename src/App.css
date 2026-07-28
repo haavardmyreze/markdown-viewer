@@ -193,6 +193,21 @@
   grid-template-columns: minmax(0, 1fr);
   padding: clamp(1.5rem, 3vw, 2.75rem) var(--gutter) 5rem;
   overflow: clip;
+  view-transition-name: open-doc;
+}
+
+/* Card → document morph: cover-fit both snapshots so neither stretches. */
+::view-transition-old(open-doc),
+::view-transition-new(open-doc) {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+::view-transition-group(open-doc) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .doc-stage {

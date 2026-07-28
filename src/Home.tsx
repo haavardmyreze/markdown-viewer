@@ -75,6 +75,22 @@ function ThemeMenu({
   )
 }
 
+// The clicked card's sheet morphs into the reader canvas (view transition).
+// Module-level so a failed open can't leave two elements named 'open-doc',
+// which would make the browser skip the transition entirely.
+let lastNamedPreview: HTMLElement | null = null
+
+function markOpeningCard(card: HTMLElement) {
+  if (lastNamedPreview) {
+    lastNamedPreview.style.viewTransitionName = ''
+  }
+  const preview = card.querySelector<HTMLElement>('.doc-card-preview')
+  if (preview) {
+    preview.style.viewTransitionName = 'open-doc'
+    lastNamedPreview = preview
+  }
+}
+
 function Home({
   docs,
   recentDocs,
@@ -287,7 +303,8 @@ function Home({
                 type="button"
                 className={isActive ? 'doc-card doc-card-active' : 'doc-card'}
                 aria-label={`Open ${title}`}
-                onClick={() => {
+                onClick={(event) => {
+                  markOpeningCard(event.currentTarget)
                   if (item.source === 'recent') {
                     void onOpenRecent(item.entry)
                     return
