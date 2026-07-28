@@ -17,8 +17,8 @@ export const TYPE_LEADING_OPTIONS: { label: string; value: number }[] = [
   { label: 'Airy', value: 1.85 },
 ]
 
-// Google Docs toolbar zoom presets: 50–90% below 100%, then +25% above 100%.
-export const PAGE_ZOOM_LEVELS = [0.5, 0.75, 0.9, 1, 1.25, 1.5, 1.75, 2] as const
+// Even 10% steps below 100%, then +25% above 100% (Google Docs toolbar style).
+export const PAGE_ZOOM_LEVELS = [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.25, 1.5, 1.75, 2] as const
 
 export const PAGE_ZOOM_MIN = PAGE_ZOOM_LEVELS[0]
 export const PAGE_ZOOM_MAX = 3

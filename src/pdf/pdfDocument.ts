@@ -1,5 +1,9 @@
 import './pdfjs'
-import { getDocument, type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist'
+import {
+  getDocument,
+  type PDFDocumentProxy,
+  type PDFPageProxy,
+} from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { headingId } from '../headings'
 import type { SectionRef } from '../headings'
 

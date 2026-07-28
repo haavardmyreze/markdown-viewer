@@ -24,7 +24,7 @@ export function computeFitZoom(
   containerHeight: number,
   mode: 'width' | 'height',
 ) {
-  const horizontalPadding = 32
+  const horizontalPadding = 96
   const verticalPadding = 48
   const availableWidth = Math.max(240, containerWidth - horizontalPadding)
   const availableHeight = Math.max(240, containerHeight - verticalPadding)
