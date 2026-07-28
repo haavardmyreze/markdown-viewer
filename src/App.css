@@ -717,13 +717,13 @@
 }
 
 .home-brand h1 {
-  font-family: var(--font-ui);
+  font-family: var(--font-display);
   color: var(--ink);
   margin: 0;
   font-size: var(--text-lg);
   font-weight: 600;
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .home-actions {
@@ -767,6 +767,7 @@
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Compact import affordances — the documents own the page. */
@@ -1026,10 +1027,10 @@
 .global-drop-title {
   margin: 0;
   color: var(--ink);
-  font-family: var(--font-ui);
+  font-family: var(--font-display);
   font-size: var(--text-base);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .global-drop-copy {
@@ -1148,6 +1149,7 @@
   margin-top: 0.15rem;
   font-size: var(--text-sm);
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .doc-card-dot {
@@ -1180,7 +1182,7 @@
 
 .home-empty {
   margin: 2rem 0 0;
-  font-family: var(--font-ui);
+  font-family: var(--font-display);
   font-size: var(--text-md);
   line-height: 1.6;
   color: var(--muted);
@@ -1290,6 +1292,7 @@
   font-family: var(--font-ui);
   font-size: 0.72rem;
   color: var(--content-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .paper-scroll h1,
@@ -2350,6 +2353,7 @@
   font-weight: 500;
   color: var(--muted);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ================================================================== *
@@ -2622,6 +2626,7 @@
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .comment-card-actions {
@@ -3073,6 +3078,7 @@
   color: var(--muted);
   font-size: var(--text-sm);
   flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
 }
 
 .palette-empty {
@@ -3716,6 +3722,7 @@ mark.find-highlight.find-current {
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
 }
 
 .find-controls {
