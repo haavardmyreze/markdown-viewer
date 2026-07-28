@@ -10,7 +10,8 @@
   --line: #3a3a3a;
   --line-strong: #505050;
   --ui-border: #d4d4d4;
-  --shadow-soft:
+  /* The paper is the one dramatically lit object in the room. */
+  --shadow-paper:
     0 1px 2px rgba(0, 0, 0, 0.14),
     0 16px 32px rgba(0, 0, 0, 0.32);
 
@@ -72,9 +73,10 @@
   --topbar-shell-pad: 0.55rem;
   --topbar-pill-h: 3rem;
   --topbar-total: calc(var(--topbar-pill-h) + var(--topbar-shell-pad) * 2);
-  --shadow-card:
-    0 1px 2px rgba(0, 0, 0, 0.16),
-    0 10px 30px rgba(0, 0, 0, 0.28);
+  /* Overlays float just above the room; everything else sits flat. */
+  --shadow-overlay:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.22);
 }
 
 /* Sepia Night — the dark pairing of Sepia: warm candlelit paper. */
