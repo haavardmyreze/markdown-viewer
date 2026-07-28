@@ -2554,6 +2554,24 @@
   user-select: text;
   pointer-events: auto;
   z-index: 1;
+  /* pdf.js's TextLayer sets --font-height/--scale-x per span and expects
+     these to turn them into the actual font-size/transform (see pdf.js's
+     own web/pdf_viewer.css) — without this, every span renders at the
+     browser's default font-size, so selection/search highlight boxes land
+     at the wrong size and position relative to the visible glyphs. */
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+  /* pdf.js emits one span per glyph run, and adjacent runs routinely
+     overlap by several px (kerning). A translucent highlight on each span
+     would then double-paint the overlap, visibly darker there than the
+     rest of the same highlight. isolation:isolate + opacity here means the
+     (solid, lighten-blended) spans below flatten into one idempotent layer
+     first, and this opacity fades that single flattened layer uniformly —
+     so overlaps disappear but the tint still reads correctly against any
+     page color, light or dark. */
+  isolation: isolate;
+  opacity: 0.68;
 }
 
 .pdf-text-layer span,
@@ -2563,25 +2581,38 @@
   transform-origin: 0 0;
   color: transparent;
   user-select: text;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
 }
 
+/* Solid (not translucent) + lighten: within the isolated/opacity layer above,
+   this makes overlapping same-colored spans idempotent (lighten of a color
+   with itself is itself) instead of compounding darker. The .pdf-text-layer
+   opacity is what actually makes these read as a tint against the page. */
 .pdf-text-layer ::selection {
-  background: color-mix(in srgb, #f5d76e 65%, transparent);
+  background: #f5d76e;
   color: transparent;
+  mix-blend-mode: lighten;
 }
 
 .pdf-text-layer span.pdf-search-hit {
-  background: color-mix(in srgb, #f5d76e 72%, transparent);
+  background: #f5d76e;
+  mix-blend-mode: lighten;
   border-radius: 2px;
 }
 
 .pdf-text-layer span.pdf-comment-hit {
-  background: color-mix(in srgb, #7eb6ff 48%, transparent);
+  background: #7eb6ff;
+  mix-blend-mode: lighten;
   border-radius: 2px;
 }
 
 .pdf-text-layer span.pdf-comment-hit-active {
-  background: color-mix(in srgb, #f5d76e 78%, transparent);
+  background: #f5d76e;
+  mix-blend-mode: lighten;
   border-radius: 2px;
 }
 

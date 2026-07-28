@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { TextLayer } from 'pdfjs-dist/legacy/build/pdf.mjs'
+import { OutputScale, TextLayer } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import type { PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import type { DocumentComment } from '../documentComments'
 import {
@@ -63,23 +63,28 @@ export default function PdfPage({
 
         // Render at device-pixel resolution and downscale via CSS, or the
         // canvas looks soft on any HiDPI/Retina display.
-        const outputScale = window.devicePixelRatio || 1
-        canvas.width = Math.floor(viewport.width * outputScale)
-        canvas.height = Math.floor(viewport.height * outputScale)
+        const outputScale = new OutputScale()
+        canvas.width = Math.floor(viewport.width * outputScale.sx)
+        canvas.height = Math.floor(viewport.height * outputScale.sy)
         canvas.style.width = `${Math.floor(viewport.width)}px`
         canvas.style.height = `${Math.floor(viewport.height)}px`
         canvas.className = 'pdf-page-canvas'
 
         const textLayerHost = document.createElement('div')
         textLayerHost.className = 'pdf-text-layer'
-        textLayerHost.style.width = `${viewport.width}px`
-        textLayerHost.style.height = `${viewport.height}px`
         textLayerRef.current = textLayerHost
 
         const pageShell = document.createElement('div')
         pageShell.className = 'pdf-page-shell'
         pageShell.style.width = `${viewport.width}px`
         pageShell.style.height = `${viewport.height}px`
+        // TextLayer positions every span with CSS round()/calc() expressions
+        // that read these custom properties from an ancestor — without them
+        // the math resolves against undefined variables and spans land in
+        // the wrong place (visible as misaligned selection/search highlights).
+        pageShell.style.setProperty('--total-scale-factor', String(viewport.scale))
+        pageShell.style.setProperty('--scale-round-x', '1px')
+        pageShell.style.setProperty('--scale-round-y', '1px')
         pageShell.append(canvas, textLayerHost)
         host.append(pageShell)
 
@@ -87,7 +92,7 @@ export default function PdfPage({
           canvas,
           canvasContext: context,
           viewport,
-          transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined,
+          transform: outputScale.scaled ? [outputScale.sx, 0, 0, outputScale.sy, 0, 0] : undefined,
         }).promise
 
         if (cancelled) {
