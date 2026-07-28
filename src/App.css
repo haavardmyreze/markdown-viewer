@@ -483,7 +483,7 @@
   top: calc(100% + 0.5rem);
   right: 0;
   z-index: 40;
-  width: 16rem;
+  width: 18rem;
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
@@ -623,17 +623,17 @@
 
 .theme-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.4rem;
 }
 
 .theme-chip {
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
+  flex-direction: column;
+  gap: var(--space-1);
   font-family: var(--font-ui);
   font-size: var(--text-sm);
-  padding: 0.4rem 0.5rem;
+  padding: var(--space-2);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-control);
   background: transparent;
@@ -654,51 +654,31 @@
 }
 
 .theme-swatch {
-  width: 0.95rem;
-  height: 0.95rem;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  flex: 0 0 auto;
+  width: 100%;
+  height: 2.6rem;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 0.5px solid rgba(128, 128, 128, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.theme-swatch[data-theme='slate'] {
-  background: linear-gradient(135deg, #0e0e0e 50%, #2f5f8f 50%);
+.theme-swatch-paper {
+  background: var(--paper);
+  color: var(--content-heading);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  line-height: 1;
+  padding: 0.3rem 0.45rem 0.2rem;
+  border-radius: 2px;
+  border-bottom: 2px solid var(--content-accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.theme-swatch[data-theme='sepia-night'] {
-  background: linear-gradient(135deg, #14100b 50%, #c89a52 50%);
-}
-
-.theme-swatch[data-theme='sepia'] {
-  background: linear-gradient(135deg, #1b1410 50%, #a85e17 50%);
-}
-
-.theme-swatch[data-theme='ink'] {
-  background: linear-gradient(135deg, #000000 50%, #ffffff 50%);
-}
-
-.theme-swatch[data-theme='notion'] {
-  background: linear-gradient(135deg, #ffffff 50%, #c0341d 50%);
-}
-
-.theme-swatch[data-theme='nord'] {
-  background: linear-gradient(135deg, #2e3440 50%, #5e81ac 50%);
-}
-
-.theme-swatch[data-theme='ink-night'] {
-  background: linear-gradient(135deg, #000000 50%, #141414 50%);
-}
-
-.theme-swatch[data-theme='graphite'] {
-  background: linear-gradient(135deg, #0a0a0a 50%, #1a1a1a 50%);
-}
-
-.theme-swatch[data-theme='ash'] {
-  background: linear-gradient(135deg, #0f0e0d 50%, #1b1917 50%);
-}
-
-.theme-swatch[data-theme='stone'] {
-  background: linear-gradient(135deg, #0c0c0c 50%, #181818 50%);
+.theme-chip.active .theme-swatch {
+  outline: 2px solid var(--room-accent);
+  outline-offset: 1px;
 }
 
 /* ================================================================== *

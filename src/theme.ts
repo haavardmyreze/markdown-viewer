@@ -25,7 +25,7 @@ export type Theme =
 
 export const THEME_BASES: { id: ThemeBase; label: string }[] = [
   { id: 'slate', label: 'Slate' },
-  { id: 'notion', label: 'Notion' },
+  { id: 'notion', label: 'Studio' },
   { id: 'nord', label: 'Nord' },
   { id: 'sepia', label: 'Sepia' },
   { id: 'ink', label: 'Ink' },

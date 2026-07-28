@@ -38,7 +38,10 @@ export function ThemePicker({ preference, onSelect }: ThemePickerProps) {
                   { base: option.id, mode: preference.mode },
                   false,
                 )}
-              />
+                aria-hidden="true"
+              >
+                <span className="theme-swatch-paper">Ag</span>
+              </span>
               {option.label}
             </button>
           ))}
