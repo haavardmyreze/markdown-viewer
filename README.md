@@ -2,7 +2,7 @@
 
 A calm, typography-focused document viewer. Opens Markdown, PDF, CSV, images, and code in one consistent reading surface — with contents, search, comments, an AI assistant, and a presentation mode (laser pointer + ink annotation) built in.
 
-Press the **Present** button in the toolbar (or `L` for laser, `D` to draw) to fade the chrome away and present a document; `Esc` exits. The command palette is on `⌘Space`.
+Press the **Present** button in the toolbar (or `L` for laser, `D` to draw) to fade the chrome away and present a document; `Esc` exits. The command palette is on `Ctrl Space`.
 
 ## Run locally
 

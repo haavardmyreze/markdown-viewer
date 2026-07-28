@@ -1,6 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { BackIcon, SettingsIcon } from './icons'
-import { modifierKeyLabel } from './platform'
 import { useDismissablePopover } from './usePopover'
 
 /**
@@ -179,7 +178,7 @@ export function ReaderTopbar({
                   <div className="settings-popover panel-surface" role="dialog" aria-label="Settings">
                     {settings}
                     <p className="settings-footer-hint">
-                      Command palette <kbd>{modifierKeyLabel()}</kbd>
+                      Command palette <kbd>Ctrl</kbd>
                       <kbd>Space</kbd>
                     </p>
                   </div>

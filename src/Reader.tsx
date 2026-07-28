@@ -38,7 +38,6 @@ import {
 } from './markdown/flashHighlight'
 import {
   clampPageZoom,
-  clampTypeScale,
   applyZoomKeyboardShortcut,
   attachDocumentZoomWheel,
   isEditableKeyboardTarget,
@@ -48,8 +47,6 @@ import {
   stepPageZoom,
   saveReaderPreferences,
   TYPE_LEADING_OPTIONS,
-  TYPE_SCALE_MAX,
-  TYPE_SCALE_MIN,
   type DocumentViewMode,
   type PageSize,
 } from './readerConfig'
@@ -271,7 +268,6 @@ function Reader({
   const [pageSize, setPageSize] = useState<PageSize>(() => loadReaderPreferences().pageSize)
   const [activeHeadingId, setActiveHeadingId] = useState<string>('')
   const [pageZoom, setPageZoom] = useState(() => loadReaderPreferences().pageZoom)
-  const [typeScale, setTypeScale] = useState(() => loadReaderPreferences().typeScale)
   const [typeLeading, setTypeLeading] = useState(
     () => loadReaderPreferences().typeLeading,
   )
@@ -381,8 +377,8 @@ function Reader({
   const trimmedSearchQuery = searchQuery.trim()
 
   useEffect(() => {
-    saveReaderPreferences({ viewMode, pageSize, pageZoom, typeScale, typeLeading })
-  }, [viewMode, pageSize, pageZoom, typeScale, typeLeading])
+    saveReaderPreferences({ viewMode, pageSize, pageZoom, typeLeading })
+  }, [viewMode, pageSize, pageZoom, typeLeading])
 
   const activeChapterId = useMemo(() => {
     const activeEntry = toc.find((entry) => entry.id === activeHeadingId)
@@ -613,20 +609,6 @@ function Reader({
     [captureScrollAnchor],
   )
 
-  const changeTypeScale = useCallback(
-    (value: number) => {
-      setTypeScale((current) => {
-        const next = clampTypeScale(value)
-        if (next === current) {
-          return current
-        }
-        captureScrollAnchor()
-        return next
-      })
-    },
-    [captureScrollAnchor],
-  )
-
   const changeTypeLeading = useCallback(
     (value: number) => {
       setTypeLeading((current) => {
@@ -723,7 +705,7 @@ function Reader({
     return () => {
       cancelled = true
     }
-  }, [viewMode, pageSize, pageZoom, typeScale, typeLeading, pagedContent, cardContent, comments, theme])
+  }, [viewMode, pageSize, pageZoom, typeLeading, pagedContent, cardContent, comments, theme])
 
   // Layout-aware pagination: measure real element heights off-screen, then
   // pack blocks into pages (pure algorithm in markdown/paginate.ts).
@@ -785,7 +767,7 @@ function Reader({
         img.removeEventListener('error', onImageSettled)
       }
     }
-  }, [blocks, blockMeta, displayMarkdown, isPaged, pageSize, measureTick, typeScale, typeLeading])
+  }, [blocks, blockMeta, displayMarkdown, isPaged, pageSize, measureTick, typeLeading])
 
   // Scroll-spy: activate the heading occupying the reading zone (~35% down).
   useEffect(() => {
@@ -949,7 +931,6 @@ function Reader({
     '--page-pad-x': `${page.paddingHorizontalMm}mm`,
     '--page-pad-y': `${page.paddingTopMm}mm`,
     '--page-scale': pageZoom,
-    '--type-scale': typeScale,
     ...(typeLeading > 0 ? { '--type-leading': typeLeading } : {}),
   } as CSSProperties
 
@@ -1047,45 +1028,6 @@ function Reader({
             aria-label="Zoom in"
             onClick={() => stepZoom('in')}
             disabled={pageZoom >= PAGE_ZOOM_MAX}
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      <div className="settings-group">
-        <div className="settings-label-row">
-          <p className="settings-label">Text size</p>
-          <span className="scale-value" aria-live="polite">
-            {Math.round(typeScale * 100)}%
-          </span>
-        </div>
-        <div className="scale-control">
-          <button
-            type="button"
-            className="scale-step"
-            aria-label="Smaller text"
-            onClick={() => changeTypeScale(typeScale - 0.05)}
-            disabled={typeScale <= TYPE_SCALE_MIN}
-          >
-            −
-          </button>
-          <input
-            type="range"
-            className="scale-slider"
-            min={TYPE_SCALE_MIN * 100}
-            max={TYPE_SCALE_MAX * 100}
-            step={5}
-            value={Math.round(typeScale * 100)}
-            aria-label="Text size"
-            onChange={(event) => changeTypeScale(Number(event.target.value) / 100)}
-          />
-          <button
-            type="button"
-            className="scale-step"
-            aria-label="Larger text"
-            onClick={() => changeTypeScale(typeScale + 0.05)}
-            disabled={typeScale >= TYPE_SCALE_MAX}
           >
             +
           </button>

@@ -6,14 +6,9 @@ export type ReaderPreferences = {
   viewMode: DocumentViewMode
   pageSize: PageSize
   pageZoom: number
-  /** Text size multiplier applied to the paper (0.85–1.3). */
-  typeScale: number
   /** Line-height for body text; 0 = theme default. */
   typeLeading: number
 }
-
-export const TYPE_SCALE_MIN = 0.85
-export const TYPE_SCALE_MAX = 1.3
 
 export const TYPE_LEADING_OPTIONS: { label: string; value: number }[] = [
   { label: 'Tight', value: 1.45 },
@@ -21,13 +16,6 @@ export const TYPE_LEADING_OPTIONS: { label: string; value: number }[] = [
   { label: 'Relaxed', value: 1.65 },
   { label: 'Airy', value: 1.85 },
 ]
-
-export function clampTypeScale(value: number) {
-  return (
-    Math.round(Math.min(TYPE_SCALE_MAX, Math.max(TYPE_SCALE_MIN, value)) * 100) /
-    100
-  )
-}
 
 // Google Docs toolbar zoom presets: 50–90% below 100%, then +25% above 100%.
 export const PAGE_ZOOM_LEVELS = [0.5, 0.75, 0.9, 1, 1.25, 1.5, 1.75, 2] as const
@@ -150,7 +138,6 @@ const DEFAULT_PREFERENCES: ReaderPreferences = {
   viewMode: 'continuous',
   pageSize: 'A4',
   pageZoom: 1,
-  typeScale: 1,
   typeLeading: 0,
 }
 
@@ -188,17 +175,6 @@ function parsePageZoom(value: string | null): number {
   return clampPageZoom(parsed)
 }
 
-function parseTypeScale(value: string | null): number {
-  if (!value) {
-    return DEFAULT_PREFERENCES.typeScale
-  }
-
-  const parsed = Number(value)
-  return Number.isFinite(parsed)
-    ? clampTypeScale(parsed)
-    : DEFAULT_PREFERENCES.typeScale
-}
-
 function parseTypeLeading(value: string | null): number {
   if (!value) {
     return DEFAULT_PREFERENCES.typeLeading
@@ -218,7 +194,6 @@ export function loadReaderPreferences(): ReaderPreferences {
       viewMode: parseViewMode(localStorage.getItem('mdv-view-mode')),
       pageSize: parsePageSize(localStorage.getItem('mdv-page-size')),
       pageZoom: parsePageZoom(localStorage.getItem('mdv-page-zoom')),
-      typeScale: parseTypeScale(localStorage.getItem('mdv-type-scale')),
       typeLeading: parseTypeLeading(localStorage.getItem('mdv-type-leading')),
     }
   } catch {
@@ -231,7 +206,6 @@ export function saveReaderPreferences(preferences: ReaderPreferences) {
     localStorage.setItem('mdv-view-mode', preferences.viewMode)
     localStorage.setItem('mdv-page-size', preferences.pageSize)
     localStorage.setItem('mdv-page-zoom', String(clampPageZoom(preferences.pageZoom)))
-    localStorage.setItem('mdv-type-scale', String(clampTypeScale(preferences.typeScale)))
     localStorage.setItem('mdv-type-leading', String(preferences.typeLeading))
   } catch {
     // ignore persistence errors (e.g. private mode)

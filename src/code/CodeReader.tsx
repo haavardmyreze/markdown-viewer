@@ -11,15 +11,12 @@ import {
   applyZoomKeyboardShortcut,
   attachDocumentZoomWheel,
   clampPageZoom,
-  clampTypeScale,
   isEditableKeyboardTarget,
   loadReaderPreferences,
   PAGE_ZOOM_MAX,
   PAGE_ZOOM_MIN,
   saveReaderPreferences,
   stepPageZoom,
-  TYPE_SCALE_MAX,
-  TYPE_SCALE_MIN,
 } from '../readerConfig'
 import DocAssistant from '../DocAssistant'
 import DocComments from '../DocComments'
@@ -76,7 +73,6 @@ export default function CodeReader({
   onOpenLibrary,
 }: CodeReaderProps) {
   const [pageZoom, setPageZoom] = useState(() => loadReaderPreferences().pageZoom)
-  const [typeScale, setTypeScale] = useState(() => loadReaderPreferences().typeScale)
   const [copied, setCopied] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeSearchLine, setActiveSearchLine] = useState<number | null>(null)
@@ -279,7 +275,6 @@ export default function CodeReader({
   const pageZoomPercent = Math.round(pageZoom * 100)
   const canvasStyle = {
     '--page-scale': pageZoom,
-    '--type-scale': typeScale,
     '--code-pad-x': 'clamp(1rem, 2vw, 1.5rem)',
     '--code-pad-y': 'clamp(0.85rem, 2vw, 1.25rem)',
     '--code-gutter-digits': gutterDigits,
@@ -293,17 +288,12 @@ export default function CodeReader({
     setPageZoom(clampPageZoom(value))
   }, [])
 
-  const changeTypeScale = useCallback((value: number) => {
-    setTypeScale(clampTypeScale(value))
-  }, [])
-
   useEffect(() => {
     saveReaderPreferences({
       ...loadReaderPreferences(),
       pageZoom,
-      typeScale,
     })
-  }, [pageZoom, typeScale])
+  }, [pageZoom])
 
   useEffect(() => {
     const root = readerRootRef.current
@@ -391,45 +381,6 @@ export default function CodeReader({
             aria-label="Zoom in"
             onClick={() => stepZoom('in')}
             disabled={pageZoom >= PAGE_ZOOM_MAX}
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      <div className="settings-group">
-        <div className="settings-label-row">
-          <p className="settings-label">Text size</p>
-          <span className="scale-value" aria-live="polite">
-            {Math.round(typeScale * 100)}%
-          </span>
-        </div>
-        <div className="scale-control">
-          <button
-            type="button"
-            className="scale-step"
-            aria-label="Smaller text"
-            onClick={() => changeTypeScale(typeScale - 0.05)}
-            disabled={typeScale <= TYPE_SCALE_MIN}
-          >
-            −
-          </button>
-          <input
-            type="range"
-            className="scale-slider"
-            min={TYPE_SCALE_MIN * 100}
-            max={TYPE_SCALE_MAX * 100}
-            step={5}
-            value={Math.round(typeScale * 100)}
-            aria-label="Text size"
-            onChange={(event) => changeTypeScale(Number(event.target.value) / 100)}
-          />
-          <button
-            type="button"
-            className="scale-step"
-            aria-label="Larger text"
-            onClick={() => changeTypeScale(typeScale + 0.05)}
-            disabled={typeScale >= TYPE_SCALE_MAX}
           >
             +
           </button>

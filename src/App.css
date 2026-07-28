@@ -1072,7 +1072,7 @@
   box-shadow: var(--shadow-paper);
   color: var(--content-ink-soft);
   overflow: hidden;
-  font-size: calc(1rem * var(--type-scale, 1));
+  font-size: 1rem;
 }
 
 .paper-scroll {
@@ -1180,6 +1180,18 @@
   font-family: var(--font-body);
   font-size: 1.05em;
   line-height: var(--type-leading, normal);
+}
+
+/* The 1.05em bump above is relative to each li's own parent, so nested
+   lists would otherwise compound it every level deeper (1.05^depth) — a
+   deeply nested folder tree would balloon in size. Undo one level's worth
+   on the nested <ul>/<ol> itself so every list item stays a flat 1.05x
+   body text, regardless of depth. */
+.paper-scroll li ul,
+.paper-scroll li ol,
+.paper-page li ul,
+.paper-page li ol {
+  font-size: calc(1em / 1.05);
 }
 
 .paper-scroll h1,
@@ -3366,7 +3378,7 @@
   background: transparent;
   border: 0;
   font-family: var(--font-mono);
-  font-size: calc(0.82rem * var(--type-scale, 1));
+  font-size: 0.82rem;
   line-height: 1.55;
   tab-size: 2;
   white-space: pre;
