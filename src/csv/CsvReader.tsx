@@ -102,6 +102,7 @@ export default function CsvReader({
   const [assistantPrefill, setAssistantPrefill] = useState<{
     text: string
     tick: number
+    autoSend?: boolean
   } | null>(null)
   const [isPanning, setIsPanning] = useState(false)
   const [viewport, setViewport] = useState<CsvViewportState>({
@@ -204,7 +205,7 @@ export default function CsvReader({
 
   const askQuery = useCallback(
     (text: string) => {
-      setAssistantPrefill({ text, tick: Date.now() })
+      setAssistantPrefill({ text, tick: Date.now(), autoSend: true })
       openPanel('assistant')
     },
     [openPanel],

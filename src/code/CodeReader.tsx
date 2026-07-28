@@ -83,6 +83,7 @@ export default function CodeReader({
   const [assistantPrefill, setAssistantPrefill] = useState<{
     text: string
     tick: number
+    autoSend?: boolean
   } | null>(null)
 
   const docColRef = useRef<HTMLDivElement | null>(null)
@@ -159,7 +160,18 @@ export default function CodeReader({
     })
   }, [])
 
+  // Command palette: a fully-formed query — send it immediately.
   const askQuery = useCallback(
+    (text: string) => {
+      setAssistantPrefill({ text, tick: Date.now(), autoSend: true })
+      openPanel('assistant')
+    },
+    [openPanel],
+  )
+
+  // Selection menu: just the selected code — prefill and let the user add
+  // their actual question before sending.
+  const askAboutSelection = useCallback(
     (text: string) => {
       setAssistantPrefill({ text, tick: Date.now() })
       openPanel('assistant')
@@ -493,7 +505,7 @@ export default function CodeReader({
           {
             id: 'ask',
             label: 'Ask',
-            onRun: (text) => askQuery(text),
+            onRun: (text) => askAboutSelection(text),
           },
         ]}
       />

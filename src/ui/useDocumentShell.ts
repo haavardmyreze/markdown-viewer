@@ -16,7 +16,6 @@ export function useDocumentShell() {
     closeAllPanels: panels.closeAll,
     openPanel: panels.open,
     closePanel: panels.close,
-    tocOpen: panels.isOpen('toc'),
     searchOpen: panels.isOpen('search'),
     commentsOpen: panels.isOpen('comments'),
     assistantOpen: panels.isOpen('assistant'),

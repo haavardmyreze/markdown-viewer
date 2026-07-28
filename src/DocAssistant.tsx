@@ -10,7 +10,6 @@ import {
   CLAUDE_MODELS,
   loadAssistantSettings,
   persistAssistantSettings,
-  type AssistantProvider,
   type AssistantSettings,
   type ClaudeConfig,
 } from './assistantConfig'
@@ -18,30 +17,16 @@ import { AssistantMarkdown } from './AssistantMarkdown'
 import { checkClaudeConnection, claudeErrorMessage, streamClaudeChat } from './claude'
 import { ContextMeter } from './ContextMeter'
 import {
+  CLAUDE_MAX_CONTEXT_CHARS,
   computeContextUsage,
   fitChatHistoryToBudget,
-  getMaxContextChars,
   messageChars,
 } from './contextBudget'
 import {
-  buildContextForQuestion,
-  buildExcerptSystemPrompt,
   buildFullDocumentSystemPrompt,
-  chunkDocument,
   getDocumentContextInfo,
-  isOverviewQuestion,
-  shouldUseFullDocument,
-  type DocumentContextMode,
 } from './documentChunks'
 import { type SectionRef } from './headings'
-import {
-  checkOllamaConnection,
-  ollamaErrorMessage,
-  resolveOllamaModel,
-  streamOllamaChat,
-  warmOllamaModel,
-  type OllamaConfig,
-} from './ollama'
 import {
   extractReferencedSections,
   formatSectionLinkGuide,
@@ -55,8 +40,13 @@ type DocAssistantProps = {
   fileName: string
   sections: SectionRef[]
   onNavigateToSection: (id: string) => void
-  /** Text to place in the input (e.g. a quoted selection), once per tick. */
-  prefill?: { text: string; tick: number } | null
+  /**
+   * Text to place in the input (e.g. a quoted selection), once per tick.
+   * `autoSend` submits it immediately (used for a fully-formed query, e.g.
+   * from the command palette) instead of leaving it for the user to finish
+   * and send themselves (e.g. a quoted passage awaiting a question).
+   */
+  prefill?: { text: string; tick: number; autoSend?: boolean } | null
 }
 
 type AssistantMessage = {
@@ -67,7 +57,7 @@ type AssistantMessage = {
 
 type SessionContext = {
   docKey: string
-  mode: DocumentContextMode
+  mode: 'full'
   systemPrompt: string
 }
 
@@ -86,10 +76,6 @@ function mergeSectionRefs(...lists: SectionRef[][]) {
   }
 
   return merged
-}
-
-function providerErrorMessage(provider: AssistantProvider, error: unknown) {
-  return provider === 'claude' ? claudeErrorMessage(error) : ollamaErrorMessage(error)
 }
 
 function isHaikuModelId(modelId: string) {
@@ -130,48 +116,42 @@ function DocAssistant({
   const [input, setInput] = useState('')
   const lastPrefillTickRef = useRef(0)
   const [loading, setLoading] = useState(false)
-  const [warming, setWarming] = useState(false)
   const [error, setError] = useState('')
   const [settings, setSettings] = useState<AssistantSettings>(() => loadAssistantSettings())
-  const [ollamaModels, setOllamaModels] = useState<string[]>([])
   const [claudeModels, setClaudeModels] = useState<string[]>([])
   const [connectionState, setConnectionState] = useState<
     'idle' | 'checking' | 'ok' | 'error'
   >('idle')
   const [showSetup, setShowSetup] = useState(false)
 
-  const provider = settings.provider
-  const contextMaxChars = getMaxContextChars(provider)
+  const contextMaxChars = CLAUDE_MAX_CONTEXT_CHARS
 
-  const chunks = useMemo(() => chunkDocument(markdown), [markdown])
   const docKey = `${fileName}:${markdown.length}`
-  const useFullDocument = useMemo(() => shouldUseFullDocument(markdown), [markdown])
   const contextInfo = useMemo(() => getDocumentContextInfo(markdown), [markdown])
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  // Selection-menu "Ask": drop the quoted passage into the input.
+  // Drop prefilled text into the input — a quoted passage from the
+  // selection menu waits for the user to finish and send it; a fully-formed
+  // query from the command palette sends immediately (autoSend), so asking
+  // there is one click instead of two.
   useEffect(() => {
     if (!open || !prefill || prefill.tick === lastPrefillTickRef.current) {
       return
     }
     lastPrefillTickRef.current = prefill.tick
     setInput(prefill.text)
+    if (prefill.autoSend) {
+      void runQuery(prefill.text)
+    }
   }, [open, prefill])
   const messagesRef = useRef<HTMLDivElement | null>(null)
   const panelRef = useRef<HTMLElement | null>(null)
   const abortRef = useRef<AbortController | null>(null)
-  const warmAbortRef = useRef<AbortController | null>(null)
   const sessionRef = useRef<SessionContext | null>(null)
 
-  const activeOllamaModel = resolveOllamaModel(settings.ollama.model, ollamaModels)
-  const ollamaReady =
-    connectionState === 'ok' &&
-    ollamaModels.length > 0 &&
-    Boolean(activeOllamaModel)
   const activeClaudeModel = resolveClaudeModel(settings.claude.model, claudeModels)
-  const claudeReady = connectionState === 'ok' && Boolean(settings.claude.apiKey.trim())
-  const assistantReady = provider === 'ollama' ? ollamaReady : claudeReady
+  const assistantReady = connectionState === 'ok' && Boolean(settings.claude.apiKey.trim())
 
   useEffect(() => {
     setMessages([])
@@ -183,9 +163,7 @@ function DocAssistant({
   useEffect(() => {
     if (!open) {
       abortRef.current?.abort()
-      warmAbortRef.current?.abort()
       setLoading(false)
-      setWarming(false)
       return
     }
 
@@ -232,15 +210,12 @@ function DocAssistant({
       return
     }
 
-    const needsSetup =
-      connectionState === 'error' ||
-      (provider === 'ollama' && connectionState === 'ok' && ollamaModels.length === 0) ||
-      (provider === 'claude' && !settings.claude.apiKey.trim())
+    const needsSetup = connectionState === 'error' || !settings.claude.apiKey.trim()
 
     if (needsSetup) {
       setShowSetup(true)
     }
-  }, [open, connectionState, ollamaModels.length, provider, settings.claude.apiKey])
+  }, [open, connectionState, settings.claude.apiKey])
 
   useEffect(() => {
     if (!open) {
@@ -262,16 +237,6 @@ function DocAssistant({
     persistAssistantSettings(next)
   }
 
-  const updateProvider = (nextProvider: AssistantProvider) => {
-    persistSettings({ ...settings, provider: nextProvider })
-    setConnectionState('idle')
-    setError('')
-  }
-
-  const updateOllama = (ollama: OllamaConfig) => {
-    persistSettings({ ...settings, ollama })
-  }
-
   const updateClaude = (claude: ClaudeConfig) => {
     persistSettings({ ...settings, claude })
   }
@@ -281,76 +246,28 @@ function DocAssistant({
     setError('')
 
     try {
-      if (provider === 'claude') {
-        const result = await checkClaudeConnection(settings.claude)
-        const supportedModels = result.models.filter((id) => isHaikuModelId(id))
-        if (supportedModels.length === 0) {
-          setConnectionState('error')
-          setClaudeModels([])
-          setError(
-            'No Haiku model is exposed for this API key/account. Check Anthropic Console model access for Haiku.',
-          )
-          return
-        }
-        setClaudeModels(supportedModels)
-        const resolved = resolveClaudeModel(settings.claude.model, supportedModels)
-        if (resolved !== settings.claude.model) {
-          const next = { ...settings, claude: { ...settings.claude, model: resolved } }
-          persistSettings(next)
-        }
-        setOllamaModels([])
-        setConnectionState('ok')
-        return
-      }
-
-      const result = await checkOllamaConnection(settings.ollama.baseUrl)
-      setOllamaModels(result.models)
-      setConnectionState('ok')
-
-      if (result.models.length === 0) {
+      const result = await checkClaudeConnection(settings.claude)
+      const supportedModels = result.models.filter((id) => isHaikuModelId(id))
+      if (supportedModels.length === 0) {
+        setConnectionState('error')
+        setClaudeModels([])
         setError(
-          'Ollama is running but no models are installed. Run `ollama pull llama3.2` (or another model).',
+          'No Haiku model is exposed for this API key/account. Check Anthropic Console model access for Haiku.',
         )
         return
       }
-
-      setSettings((current) => {
-        const resolved = resolveOllamaModel(current.ollama.model, result.models)
-        if (!resolved || resolved === current.ollama.model) {
-          return current
-        }
-        const next = {
-          ...current,
-          ollama: { ...current.ollama, model: resolved },
-        }
-        persistAssistantSettings(next)
-        return next
-      })
-
-      const resolved = resolveOllamaModel(settings.ollama.model, result.models)
-      if (resolved) {
-        warmAbortRef.current?.abort()
-        const warmController = new AbortController()
-        warmAbortRef.current = warmController
-        setWarming(true)
-        void warmOllamaModel(
-          { baseUrl: settings.ollama.baseUrl, model: resolved },
-          warmController.signal,
-        )
-          .catch(() => {
-            // warm-up is best-effort
-          })
-          .finally(() => {
-            if (!warmController.signal.aborted) {
-              setWarming(false)
-            }
-          })
+      setClaudeModels(supportedModels)
+      const resolved = resolveClaudeModel(settings.claude.model, supportedModels)
+      if (resolved !== settings.claude.model) {
+        const next = { ...settings, claude: { ...settings.claude, model: resolved } }
+        persistSettings(next)
       }
+      setConnectionState('ok')
     } catch (connectionError) {
       setConnectionState('error')
-      setError(providerErrorMessage(provider, connectionError))
+      setError(claudeErrorMessage(connectionError))
     }
-  }, [provider, settings, settings.claude, settings.ollama.baseUrl, settings.ollama.model])
+  }, [settings])
 
   useEffect(() => {
     if (!open) {
@@ -359,71 +276,41 @@ function DocAssistant({
     void testConnection()
   }, [open, testConnection])
 
-  const resolveSystemPrompt = (question: string) => {
-    const linkGuide = formatSectionLinkGuide(sections)
+  // Claude's context window is large enough to always send the whole
+  // document, cached for the session once built.
+  const resolveSystemPrompt = () => {
     const existing = sessionRef.current
-    if (existing && existing.docKey === docKey && existing.mode === 'full') {
+    if (existing && existing.docKey === docKey) {
       return {
         systemPrompt: existing.systemPrompt,
-        mode: existing.mode,
         relatedSections: [] as SectionRef[],
       }
     }
 
-    const forceFullDocument = provider === 'claude'
-    if (forceFullDocument || useFullDocument) {
-      const systemPrompt = buildFullDocumentSystemPrompt(fileName, markdown, linkGuide)
-      sessionRef.current = { docKey, mode: 'full', systemPrompt }
-      return {
-        systemPrompt,
-        mode: 'full' as const,
-        relatedSections: [] as SectionRef[],
-      }
-    }
-
-    const { contextBlock, relatedSections } = buildContextForQuestion(chunks, question)
-    const systemPrompt = buildExcerptSystemPrompt(
-      fileName,
-      contextBlock,
-      isOverviewQuestion(question),
-      linkGuide,
-    )
-    return { systemPrompt, mode: 'excerpts' as const, relatedSections }
+    const linkGuide = formatSectionLinkGuide(sections)
+    const systemPrompt = buildFullDocumentSystemPrompt(fileName, markdown, linkGuide)
+    sessionRef.current = { docKey, mode: 'full', systemPrompt }
+    return { systemPrompt, relatedSections: [] as SectionRef[] }
   }
 
-  const estimateSystemPromptChars = useCallback(
-    (question: string) => {
-      const session = sessionRef.current
-      if (session && session.docKey === docKey && session.mode === 'full') {
-        return session.systemPrompt.length
-      }
+  const estimateSystemPromptChars = useCallback(() => {
+    const session = sessionRef.current
+    if (session && session.docKey === docKey) {
+      return session.systemPrompt.length
+    }
 
-      const forceFullDocument = provider === 'claude'
-      if (forceFullDocument || useFullDocument) {
-        return buildFullDocumentSystemPrompt(
-          fileName,
-          markdown,
-          formatSectionLinkGuide(sections),
-        ).length
-      }
-
-      const sampleQuestion = question.trim() || 'overview'
-      const { contextBlock } = buildContextForQuestion(chunks, sampleQuestion)
-      return buildExcerptSystemPrompt(
-        fileName,
-        contextBlock,
-        isOverviewQuestion(sampleQuestion),
-        formatSectionLinkGuide(sections),
-      ).length
-    },
-    [chunks, docKey, fileName, markdown, provider, sections, useFullDocument],
-  )
+    return buildFullDocumentSystemPrompt(
+      fileName,
+      markdown,
+      formatSectionLinkGuide(sections),
+    ).length
+  }, [docKey, fileName, markdown, sections])
 
   const contextUsage = useMemo(() => {
     const history = messages.filter((message) => message.content.trim())
     return computeContextUsage(
       {
-        systemChars: estimateSystemPromptChars(input),
+        systemChars: estimateSystemPromptChars(),
         history,
         draftQuestion: input,
       },
@@ -444,54 +331,25 @@ function DocAssistant({
     })
   }
 
-  const sendMessage = async (event: FormEvent) => {
-    event.preventDefault()
-    const question = input.trim()
+  const runQuery = async (rawQuestion: string) => {
+    const question = rawQuestion.trim()
     if (!question || loading) {
       return
     }
 
-    if (provider === 'ollama') {
-      if (ollamaModels.length === 0) {
-        setError('No Ollama model available. Pull a model and test the connection first.')
-        setShowSetup(true)
-        return
-      }
-    } else if (!settings.claude.apiKey.trim()) {
+    if (!settings.claude.apiKey.trim()) {
       setError('Enter your Anthropic API key in connection settings.')
       setShowSetup(true)
       return
     }
-    let activeClaude = settings.claude
-    if (provider === 'claude') {
-      const resolved = resolveClaudeModel(settings.claude.model, claudeModels)
-      if (resolved !== settings.claude.model) {
-        activeClaude = { ...settings.claude, model: resolved }
-        persistSettings({ ...settings, claude: activeClaude })
-      } else {
-        activeClaude = { ...settings.claude, model: resolved }
-      }
+
+    const resolved = resolveClaudeModel(settings.claude.model, claudeModels)
+    const activeClaude = { ...settings.claude, model: resolved }
+    if (resolved !== settings.claude.model) {
+      persistSettings({ ...settings, claude: activeClaude })
     }
 
-
-    let activeOllama = settings.ollama
-    if (provider === 'ollama') {
-      const resolved = resolveOllamaModel(settings.ollama.model, ollamaModels)
-      if (!resolved) {
-        setError('Pick an installed model under connection settings.')
-        setShowSetup(true)
-        return
-      }
-      if (resolved !== settings.ollama.model) {
-        activeOllama = { ...settings.ollama, model: resolved }
-        persistSettings({ ...settings, ollama: activeOllama })
-      } else {
-        activeOllama = { ...settings.ollama, model: resolved }
-      }
-    }
-
-    const { systemPrompt, relatedSections: contextSections } =
-      resolveSystemPrompt(question)
+    const { systemPrompt, relatedSections: contextSections } = resolveSystemPrompt()
 
     const requestUsage = computeContextUsage(
       {
@@ -537,36 +395,18 @@ function DocAssistant({
     }))
 
     try {
-      if (provider === 'claude') {
-        await streamClaudeChat(
-          activeClaude,
-          systemPrompt,
-          [...chatHistory, { role: 'user', content: question }],
-          {
-            signal: controller.signal,
-            onToken: (token) => {
-              assistantText += token
-              appendAssistantToken(assistantText)
-            },
+      await streamClaudeChat(
+        activeClaude,
+        systemPrompt,
+        [...chatHistory, { role: 'user', content: question }],
+        {
+          signal: controller.signal,
+          onToken: (token) => {
+            assistantText += token
+            appendAssistantToken(assistantText)
           },
-        )
-      } else {
-        await streamOllamaChat(
-          activeOllama,
-          [
-            { role: 'system', content: systemPrompt },
-            ...chatHistory,
-            { role: 'user', content: question },
-          ],
-          {
-            signal: controller.signal,
-            onToken: (token) => {
-              assistantText += token
-              appendAssistantToken(assistantText)
-            },
-          },
-        )
-      }
+        },
+      )
 
       const relatedSections = mergeSectionRefs(
         extractReferencedSections(assistantText, sections),
@@ -595,11 +435,16 @@ function DocAssistant({
         }
         return current
       })
-      setError(providerErrorMessage(provider, sendError))
+      setError(claudeErrorMessage(sendError))
     } finally {
       setLoading(false)
       abortRef.current = null
     }
+  }
+
+  const sendMessage = (event: FormEvent) => {
+    event.preventDefault()
+    void runQuery(input)
   }
 
   if (!open) {
@@ -610,24 +455,14 @@ function DocAssistant({
     connectionState === 'checking'
       ? 'Checking connection…'
       : connectionState === 'ok'
-        ? provider === 'claude'
-          ? `Connected · ${activeClaudeModel}`
-          : activeOllamaModel
-            ? `Connected · ${activeOllamaModel}`
-            : ollamaModels.length === 0
-              ? 'Connected — no models installed'
-              : 'Connected'
+        ? `Connected · ${activeClaudeModel}`
         : connectionState === 'error'
           ? 'Not connected'
           : 'Connection not checked'
 
-  const checkingLabel =
-    provider === 'claude' ? 'Checking Claude connection…' : 'Checking Ollama connection…'
+  const checkingLabel = 'Checking Claude connection…'
 
-  const setupPlaceholder =
-    provider === 'claude'
-      ? 'Add your API key above to start asking questions…'
-      : 'Connect Ollama above to start asking questions…'
+  const setupPlaceholder = 'Add your API key above to start asking questions…'
 
   return (
     <aside
@@ -672,10 +507,7 @@ function DocAssistant({
               className={
                 assistantReady
                   ? 'assistant-conn-dot assistant-conn-dot-ok'
-                  : connectionState === 'error' ||
-                      (provider === 'ollama' &&
-                        connectionState === 'ok' &&
-                        ollamaModels.length === 0)
+                  : connectionState === 'error'
                     ? 'assistant-conn-dot assistant-conn-dot-error'
                     : 'assistant-conn-dot'
               }
@@ -703,131 +535,48 @@ function DocAssistant({
         <div className="assistant-setup-popover">
           <p className="assistant-setup-status">{connectionLabel}</p>
 
-          <div className="assistant-provider-toggle" role="group" aria-label="AI provider">
-            <button
-              type="button"
-              className={
-                provider === 'ollama'
-                  ? 'assistant-provider-option active'
-                  : 'assistant-provider-option'
+          <label className="assistant-field">
+            <span>API key</span>
+            <input
+              type="password"
+              value={settings.claude.apiKey}
+              onChange={(event) =>
+                updateClaude({ ...settings.claude, apiKey: event.target.value })
               }
-              onClick={() => updateProvider('ollama')}
-            >
-              Ollama
-            </button>
-            <button
-              type="button"
-              className={
-                provider === 'claude'
-                  ? 'assistant-provider-option active'
-                  : 'assistant-provider-option'
+              placeholder="sk-ant-…"
+              autoComplete="off"
+            />
+          </label>
+          <label className="assistant-field">
+            <span>Model</span>
+            <select
+              value={activeClaudeModel}
+              onChange={(event) =>
+                updateClaude({ ...settings.claude, model: event.target.value })
               }
-              onClick={() => updateProvider('claude')}
             >
-              Claude
-            </button>
-          </div>
-
-          {provider === 'ollama' ? (
-            <>
-              <label className="assistant-field">
-                <span>Server URL</span>
-                <input
-                  type="url"
-                  value={settings.ollama.baseUrl}
-                  onChange={(event) =>
-                    updateOllama({ ...settings.ollama, baseUrl: event.target.value })
-                  }
-                  placeholder="http://127.0.0.1:11434"
-                />
-              </label>
-              <label className="assistant-field">
-                <span>Model</span>
-                {ollamaModels.length > 0 ? (
-                  <select
-                    value={resolveOllamaModel(settings.ollama.model, ollamaModels)}
-                    onChange={(event) =>
-                      updateOllama({ ...settings.ollama, model: event.target.value })
-                    }
-                  >
-                    {ollamaModels.map((model) => (
-                      <option key={model} value={model}>
-                        {model}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={settings.ollama.model}
-                    onChange={(event) =>
-                      updateOllama({ ...settings.ollama, model: event.target.value })
-                    }
-                    placeholder="Run ollama list"
-                  />
-                )}
-              </label>
-              <button type="button" className="assistant-test" onClick={testConnection}>
-                Test connection
-              </button>
-              <p className="assistant-hint">
-                Requires{' '}
-                <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">
-                  Ollama
-                </a>{' '}
-                running locally. Run <code>ollama pull &lt;model&gt;</code> if no models appear.
-              </p>
-            </>
-          ) : (
-            <>
-              <label className="assistant-field">
-                <span>API key</span>
-                <input
-                  type="password"
-                  value={settings.claude.apiKey}
-                  onChange={(event) =>
-                    updateClaude({ ...settings.claude, apiKey: event.target.value })
-                  }
-                  placeholder="sk-ant-…"
-                  autoComplete="off"
-                />
-              </label>
-              <label className="assistant-field">
-                <span>Model</span>
-                <select
-                  value={activeClaudeModel}
-                  onChange={(event) =>
-                    updateClaude({ ...settings.claude, model: event.target.value })
-                  }
-                >
-                  {(claudeModels.length > 0
-                    ? claudeModels
-                    : CLAUDE_MODELS.map((model) => model.id)
-                  ).map((modelId) => (
-                    <option key={modelId} value={modelId}>
-                      {CLAUDE_MODELS.find((entry) => entry.id === modelId)?.label ??
-                        (isHaikuModelId(modelId) ? `Claude Haiku (${modelId})` : modelId)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button type="button" className="assistant-test" onClick={testConnection}>
-                Test connection
-              </button>
-              <p className="assistant-hint">
-                Get an API key from{' '}
-                <a
-                  href="https://console.anthropic.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  console.anthropic.com
-                </a>
-                . Stored locally in your browser. Use <code>npm run dev</code> or{' '}
-                <code>npm run preview</code> so requests go through the built-in proxy.
-              </p>
-            </>
-          )}
+              {(claudeModels.length > 0
+                ? claudeModels
+                : CLAUDE_MODELS.map((model) => model.id)
+              ).map((modelId) => (
+                <option key={modelId} value={modelId}>
+                  {CLAUDE_MODELS.find((entry) => entry.id === modelId)?.label ??
+                    (isHaikuModelId(modelId) ? `Claude Haiku (${modelId})` : modelId)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className="assistant-test" onClick={testConnection}>
+            Test connection
+          </button>
+          <p className="assistant-hint">
+            Get an API key from{' '}
+            <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer">
+              console.anthropic.com
+            </a>
+            . Stored locally in your browser. Use <code>npm run dev</code> or{' '}
+            <code>npm run preview</code> so requests go through the built-in proxy.
+          </p>
 
           <div className="assistant-context-info">
             <span className="assistant-context-label">Document context</span>
@@ -840,91 +589,43 @@ function DocAssistant({
       <div className="assistant-messages" ref={messagesRef}>
         {!assistantReady && connectionState !== 'checking' ? (
           <div className="assistant-setup-guide">
-            {provider === 'claude' ? (
-              <>
-                <h3>Connect Claude to get started</h3>
-                <p>
-                  Use Anthropic&apos;s Claude API for cloud-powered answers about this document.
-                  Your API key stays in the browser on this machine.
-                </p>
-                <ol className="assistant-setup-steps">
-                  <li>
-                    <strong>Get an API key</strong>
-                    <span>
-                      Sign in at{' '}
-                      <a
-                        href="https://console.anthropic.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        console.anthropic.com
-                      </a>{' '}
-                      and create an API key.
-                    </span>
-                  </li>
-                  <li>
-                    <strong>Run the app locally</strong>
-                    <span>
-                      Claude requests use a dev proxy to avoid browser CORS blocks. Start with:
-                    </span>
-                    <code>npm run dev</code>
-                  </li>
-                  <li>
-                    <strong>Add your key</strong>
-                    <span>
-                      Click the connection icon, choose Claude, paste your API key, pick a model,
-                      then click Test connection.
-                    </span>
-                  </li>
-                </ol>
-              </>
-            ) : (
-              <>
-                <h3>Connect Ollama to get started</h3>
-                <p>
-                  The assistant runs a local AI on your machine via{' '}
-                  <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">
-                    Ollama
-                  </a>
-                  . Nothing is sent to the cloud. Or switch to Claude in connection settings.
-                </p>
-                <ol className="assistant-setup-steps">
-                  <li>
-                    <strong>Install Ollama</strong>
-                    <span>
-                      Download from{' '}
-                      <a
-                        href="https://ollama.com/download"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        ollama.com/download
-                      </a>{' '}
-                      and run the installer.
-                    </span>
-                  </li>
-                  <li>
-                    <strong>Pull a model</strong>
-                    <span>Open a terminal and run:</span>
-                    <code>ollama pull llama3.2</code>
-                  </li>
-                  <li>
-                    <strong>Test connection</strong>
-                    <span>
-                      Click the connection icon, confirm the server URL, pick a model, then click
-                      Test connection.
-                    </span>
-                  </li>
-                </ol>
-              </>
-            )}
+            <h3>Connect Claude to get started</h3>
+            <p>
+              Use Anthropic&apos;s Claude API for cloud-powered answers about this document.
+              Your API key stays in the browser on this machine.
+            </p>
+            <ol className="assistant-setup-steps">
+              <li>
+                <strong>Get an API key</strong>
+                <span>
+                  Sign in at{' '}
+                  <a
+                    href="https://console.anthropic.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    console.anthropic.com
+                  </a>{' '}
+                  and create an API key.
+                </span>
+              </li>
+              <li>
+                <strong>Run the app locally</strong>
+                <span>
+                  Claude requests use a dev proxy to avoid browser CORS blocks. Start with:
+                </span>
+                <code>npm run dev</code>
+              </li>
+              <li>
+                <strong>Add your key</strong>
+                <span>
+                  Click the connection icon, paste your API key, pick a model, then click Test
+                  connection.
+                </span>
+              </li>
+            </ol>
             {connectionState === 'error' && error ? (
               <p className="assistant-error">{error}</p>
-            ) : provider === 'ollama' && connectionState === 'ok' && ollamaModels.length === 0 ? (
-              <p className="assistant-error">
-                Ollama is running but no models are installed yet. Run{' '}
-                <code>ollama pull llama3.2</code> in a terminal.
-              </p>
             ) : null}
             <button type="button" className="assistant-test" onClick={testConnection}>
               Test connection
@@ -945,7 +646,7 @@ function DocAssistant({
                   key={suggestion}
                   type="button"
                   className="assistant-suggestion"
-                  disabled={loading || warming}
+                  disabled={loading}
                   onClick={() => setInput(suggestion)}
                 >
                   {suggestion}
@@ -1030,13 +731,12 @@ function DocAssistant({
             className="assistant-send"
             disabled={
               loading ||
-              warming ||
               !input.trim() ||
               !assistantReady ||
               contextUsage.isOverBudget
             }
           >
-            {warming ? 'Loading model…' : loading ? 'Thinking…' : 'Send'}
+            {loading ? 'Thinking…' : 'Send'}
           </button>
         </div>
       </form>

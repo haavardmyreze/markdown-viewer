@@ -113,32 +113,14 @@ Then set **Open with → Quiet Reader → Always** for the file types you want. 
 
 ## Ask about this document
 
-Open a document and click **Ask** in the reader toolbar to chat about the current file. Choose **Ollama** (local, free) or **Claude** (Anthropic API) in connection settings. The app sends only the most relevant sections (by heading), not the entire document — unless the file is small enough to fit in one request.
-
-### Ollama (local)
-
-1. Install [Ollama](https://ollama.com/) and start it: `ollama serve`
-2. Pull a model, e.g. `ollama pull llama3.2`
-3. If the browser cannot connect, allow cross-origin access and restart Ollama:
-
-   ```bash
-   # Windows (PowerShell)
-   $env:OLLAMA_ORIGINS="*"
-   ollama serve
-   ```
-
-4. In the assistant panel, open connection settings, choose **Ollama**, set the server URL (default `http://127.0.0.1:11434`), and pick a model.
-
-Answers stay on your machine — nothing is sent to the cloud.
-
-### Claude (Anthropic API)
+Open a document and click **Ask** in the reader toolbar to chat about the current file, powered by Anthropic's Claude API.
 
 1. Create an API key at [console.anthropic.com](https://console.anthropic.com/)
 2. Run the app with `npm run dev` or `npm run preview` (Claude requests go through a built-in proxy to avoid browser CORS blocks)
-3. In connection settings, choose **Claude**, paste your API key, pick a model (default **Claude 3.5 Haiku**), and click **Test connection**
+3. In connection settings, paste your API key, pick a model (default **Claude 3.5 Haiku**), and click **Test connection**
 
 Your API key is stored in the browser's local storage on this machine only. Static hosting without a proxy cannot reach the Claude API from the browser — use the dev or preview server, or configure your own reverse proxy to `https://api.anthropic.com`.
 
-**Context mode:** If the document is under ~36k characters, the **full document** is sent once per chat session and reused for follow-up questions. Longer documents use **relevant sections** (loaded once per session). Ollama auto-selects an installed model from `ollama list` if the saved model name is missing.
+**Context mode:** the complete document is sent once per chat session and reused for follow-up questions.
 
 **Prompt caching (Claude):** The document system prompt is marked for Anthropic prompt caching, so follow-up questions in the same session reuse cached context when the prompt is unchanged (especially in full-document mode). In dev mode, cache hit/miss stats are logged to the browser console.

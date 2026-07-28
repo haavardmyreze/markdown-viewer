@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 
-export type ReaderPanelId = 'toc' | 'search' | 'comments' | 'assistant'
+export type ReaderPanelId = 'search' | 'comments' | 'assistant'
 
 /**
  * Single-active reader panel state: opening one panel closes the others,

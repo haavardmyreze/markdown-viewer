@@ -1,5 +1,4 @@
 import {
-  type MouseEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -33,7 +32,6 @@ import {
   createCommentsTopbarAction,
   createPresentTopbarAction,
   createSearchTopbarAction,
-  createTocTopbarAction,
 } from '../ui/topbarActions'
 import {
   createDrawPaletteAction,
@@ -109,7 +107,6 @@ export default function PdfReader({
     panels,
     closeAllPanels,
     openPanel,
-    tocOpen,
     searchOpen,
     commentsOpen,
     assistantOpen,
@@ -436,7 +433,6 @@ export default function PdfReader({
   }
 
   const topbarActions: TopbarAction[] = [
-    createTocTopbarAction(tocOpen, () => panels.toggle('toc')),
     createSearchTopbarAction(searchOpen || Boolean(trimmedSearchQuery), () => {
       panels.toggle('search')
       if (!searchOpen) {
@@ -567,7 +563,7 @@ export default function PdfReader({
       <TocRail
         sections={index.sections}
         activeId={activeSectionId}
-        hidden={tocOpen || commentsOpen || drawMode}
+        hidden={commentsOpen || drawMode}
         onNavigate={navigateToSection}
       />
       <ReaderTopbar
@@ -622,31 +618,6 @@ export default function PdfReader({
         data-theme={theme}
         data-comment-mode={commentsOpen ? 'true' : undefined}
       >
-        <aside className={tocOpen ? 'toc-panel toc-open' : 'toc-panel'} aria-label="Table of contents">
-          <h2>Contents</h2>
-          <nav>
-            {index.sections.map((entry) => (
-              <a
-                key={entry.id}
-                href={`#${entry.id}`}
-                className={[
-                  'toc-link',
-                  `toc-l${entry.level}`,
-                  activeSectionId === entry.id ? 'active' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                onClick={(event: MouseEvent<HTMLAnchorElement>) => {
-                  event.preventDefault()
-                  navigateToSection(entry.id)
-                }}
-              >
-                {entry.text}
-              </a>
-            ))}
-          </nav>
-        </aside>
-
         <div className="doc-stage" ref={docStageRef}>
           <div
             className={commentsOpen ? 'doc-col comment-mode pdf-doc-col' : 'doc-col pdf-doc-col'}

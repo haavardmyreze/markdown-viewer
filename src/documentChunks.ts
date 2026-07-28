@@ -1,4 +1,4 @@
-import { formatCharCount, MAX_CONTEXT_CHARS } from './contextBudget'
+import { formatCharCount, CLAUDE_MAX_CONTEXT_CHARS } from './contextBudget'
 import { headingId, type SectionRef } from './headings'
 
 export type DocChunk = {
@@ -410,25 +410,15 @@ export type DocumentContextInfo = {
 export function getDocumentContextInfo(markdown: string): DocumentContextInfo {
   const documentChars = markdown.length
   const sizeLabel = formatCharCount(documentChars)
-  const limitLabel = formatCharCount(FULL_DOCUMENT_CHAR_LIMIT)
-  const capLabel = formatCharCount(MAX_CONTEXT_CHARS)
+  const capLabel = formatCharCount(CLAUDE_MAX_CONTEXT_CHARS)
   const budgetNote = `Chat history uses whatever space remains in a ${capLabel} total context budget.`
 
-  if (shouldUseFullDocument(markdown)) {
-    return {
-      mode: 'full',
-      documentChars,
-      summary: `Full document · ${sizeLabel}`,
-      detail:
-        `The complete document is sent on your first question and reused for follow-ups in this chat. ${budgetNote}`,
-    }
-  }
-
   return {
-    mode: 'excerpts',
+    mode: 'full',
     documentChars,
-    summary: `Relevant sections · ${sizeLabel} document`,
-    detail: `Documents over ${limitLabel} use excerpts. Each question sends the outline, introduction, and about 5–7.5k characters of matching sections (up to ~11k for overview questions). ${budgetNote}`,
+    summary: `Full document · ${sizeLabel}`,
+    detail:
+      `The complete document is sent on your first question and reused for follow-ups in this chat. ${budgetNote}`,
   }
 }
 

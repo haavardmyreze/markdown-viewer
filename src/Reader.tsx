@@ -1,6 +1,5 @@
 import {
   type CSSProperties,
-  type MouseEvent,
   type ReactNode,
   memo,
   useCallback,
@@ -26,7 +25,7 @@ import {
   splitMarkdownIntoCards,
   type PageData,
 } from './markdown/blocks'
-import { extractToc, shouldShowTocEntry, type TocEntry } from './markdown/toc'
+import { extractToc, type TocEntry } from './markdown/toc'
 import {
   packBlocksIntoPages,
   pageContentHeightPx,
@@ -61,7 +60,6 @@ import {
   createCommentsTopbarAction,
   createPresentTopbarAction,
   createSearchTopbarAction,
-  createTocTopbarAction,
 } from './ui/topbarActions'
 import { SearchPanel } from './ui/SearchPanel'
 import { ThemePicker } from './ui/ThemePicker'
@@ -296,14 +294,13 @@ function Reader({
   const [assistantPrefill, setAssistantPrefill] = useState<{
     text: string
     tick: number
+    autoSend?: boolean
   } | null>(null)
 
   const {
     panels,
     closeAllPanels,
     openPanel,
-    closePanel,
-    tocOpen,
     searchOpen,
     commentsOpen,
     assistantOpen,
@@ -321,7 +318,6 @@ function Reader({
   } = present
 
   const measureHostRef = useRef<HTMLDivElement | null>(null)
-  const tocPanelRef = useRef<HTMLElement | null>(null)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
   const docColRef = useRef<HTMLDivElement | null>(null)
   const inkBinding = useMarkdownInkBinding(docColRef, pageZoom)
@@ -850,18 +846,6 @@ function Reader({
     return () => window.removeEventListener('hashchange', updateFromHash)
   }, [])
 
-  useEffect(() => {
-    if (!activeHeadingId || !tocPanelRef.current) {
-      return
-    }
-
-    const activeLink = tocPanelRef.current.querySelector<HTMLAnchorElement>(
-      `a[href="#${CSS.escape(activeHeadingId)}"]`,
-    )
-
-    activeLink?.scrollIntoView({ block: 'nearest' })
-  }, [activeHeadingId])
-
   const navigateToSection = useCallback(
     (id: string) => {
       const scope = docColRef.current
@@ -890,15 +874,9 @@ function Reader({
         setActiveHeadingId(id)
       }
 
-      closePanel('toc')
     },
-    [toc, closePanel],
+    [toc],
   )
-
-  const navigateToHeading = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
-    event.preventDefault()
-    navigateToSection(id)
-  }
 
   // Selection menu: resolve the comment anchor from the live selection BEFORE
   // comment mode re-renders the document (which clears the selection).
@@ -932,7 +910,7 @@ function Reader({
 
   const askQuery = useCallback(
     (text: string) => {
-      setAssistantPrefill({ text, tick: Date.now() })
+      setAssistantPrefill({ text, tick: Date.now(), autoSend: true })
       openPanel('assistant')
     },
     [openPanel],
@@ -968,7 +946,6 @@ function Reader({
   const pageZoomPercent = Math.round(pageZoom * 100)
 
   const topbarActions: TopbarAction[] = [
-    createTocTopbarAction(tocOpen, () => panels.toggle('toc')),
     createSearchTopbarAction(searchOpen || Boolean(trimmedSearchQuery), () => {
       panels.toggle('search')
       if (!searchOpen) {
@@ -1129,12 +1106,6 @@ function Reader({
     sectionsPaletteGroup(documentSections, navigateToSection),
     actionsPaletteGroup([
       {
-        id: 'toggle-toc',
-        title: 'Toggle contents',
-        keywords: 'toc outline headings',
-        action: () => panels.toggle('toc'),
-      },
-      {
         id: 'search',
         title: 'Search document',
         keywords: 'find text',
@@ -1225,7 +1196,7 @@ function Reader({
       <TocRail
         sections={tocRailSections}
         activeId={activeSectionId || activeChapterId}
-        hidden={tocOpen || commentsOpen || drawMode}
+        hidden={commentsOpen || drawMode}
         onNavigate={navigateToSection}
       />
       <Lightbox scopeRef={docColRef} />
@@ -1293,55 +1264,6 @@ function Reader({
         data-comment-mode={commentsOpen ? 'true' : undefined}
         style={canvasStyle}
       >
-        <aside
-          className={tocOpen ? 'toc-panel toc-open' : 'toc-panel'}
-          aria-label="Table of contents"
-          ref={tocPanelRef}
-        >
-          <h2>Contents</h2>
-          {toc.length === 0 ? (
-            <p className="toc-empty">No headings in this document yet.</p>
-          ) : (
-            <nav>
-              {toc.map((entry) =>
-                shouldShowTocEntry(
-                  entry,
-                  activeChapterId,
-                  activeSectionId,
-                  hasTopLevelChapters,
-                ) ? (
-                  <a
-                    key={entry.id}
-                    href={`#${entry.id}`}
-                    onClick={(event) => navigateToHeading(event, entry.id)}
-                    className={[
-                      'toc-link',
-                      `toc-l${entry.level}`,
-                      activeHeadingId === entry.id ? 'active' : '',
-                      (entry.level === 1 && entry.id === activeChapterId) ||
-                      (!hasTopLevelChapters &&
-                        entry.level === 2 &&
-                        entry.id === activeChapterId)
-                        ? 'active-chapter'
-                        : '',
-                      entry.level === 2 && entry.id === activeSectionId
-                        ? 'active-section'
-                        : '',
-                      entry.level === 3 && entry.sectionId === activeSectionId
-                        ? 'in-active-section'
-                        : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                  >
-                    {entry.text}
-                  </a>
-                ) : null,
-              )}
-            </nav>
-          )}
-        </aside>
-
         <div className="doc-stage" ref={docStageRef}>
           <div
             className={commentsOpen ? 'doc-col comment-mode' : 'doc-col'}

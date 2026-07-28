@@ -3,17 +3,7 @@
 // between formats.
 
 import type { TopbarAction } from './ReaderTopbar'
-import { AskIcon, CommentsIcon, ContentsIcon, PresentIcon, SearchIcon } from './icons'
-
-export function createTocTopbarAction(open: boolean, onToggle: () => void): TopbarAction {
-  return {
-    id: 'toc',
-    label: 'Contents',
-    icon: <ContentsIcon />,
-    active: open,
-    onToggle,
-  }
-}
+import { AskIcon, CommentsIcon, PresentIcon, SearchIcon } from './icons'
 
 export function createSearchTopbarAction(
   active: boolean,

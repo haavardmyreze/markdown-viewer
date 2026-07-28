@@ -1,15 +1,9 @@
-import { loadOllamaConfig, saveOllamaConfig, type OllamaConfig } from './ollama'
-
-export type AssistantProvider = 'ollama' | 'claude'
-
 export type ClaudeConfig = {
   apiKey: string
   model: string
 }
 
 export type AssistantSettings = {
-  provider: AssistantProvider
-  ollama: OllamaConfig
   claude: ClaudeConfig
 }
 
@@ -26,15 +20,6 @@ export const CLAUDE_MODELS = [
   { id: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
 ] as const
 
-function loadProvider(): AssistantProvider {
-  try {
-    const stored = localStorage.getItem('mdv-assistant-provider')
-    return stored === 'claude' ? 'claude' : 'ollama'
-  } catch {
-    return 'ollama'
-  }
-}
-
 function loadClaudeConfig(): ClaudeConfig {
   try {
     const apiKey = localStorage.getItem('mdv-claude-api-key') ?? ''
@@ -48,17 +33,7 @@ function loadClaudeConfig(): ClaudeConfig {
 
 export function loadAssistantSettings(): AssistantSettings {
   return {
-    provider: loadProvider(),
-    ollama: loadOllamaConfig(),
     claude: loadClaudeConfig(),
-  }
-}
-
-export function saveAssistantProvider(provider: AssistantProvider) {
-  try {
-    localStorage.setItem('mdv-assistant-provider', provider)
-  } catch {
-    // ignore persistence errors
   }
 }
 
@@ -73,7 +48,5 @@ export function saveClaudeConfig(config: ClaudeConfig) {
 }
 
 export function persistAssistantSettings(settings: AssistantSettings) {
-  saveAssistantProvider(settings.provider)
-  saveOllamaConfig(settings.ollama)
   saveClaudeConfig(settings.claude)
 }
