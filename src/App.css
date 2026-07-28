@@ -193,10 +193,15 @@
   grid-template-columns: minmax(0, 1fr);
   padding: clamp(1.5rem, 3vw, 2.75rem) var(--gutter) 5rem;
   overflow: clip;
-  view-transition-name: open-doc;
+  /* view-transition-name is NOT set here — App.tsx's navigate() applies it
+     inline, only for the transition that opens a document, and clears it
+     the instant that transition finishes. A name that lived here
+     permanently made every later transition (theme switch, going back)
+     re-snapshot the whole — possibly very long — document. */
 }
 
-/* Card → document morph: cover-fit both snapshots so neither stretches. */
+/* Card → document morph: cover-fit both snapshots so neither stretches.
+   Inert until App.tsx names an element 'open-doc' for one transition. */
 ::view-transition-old(open-doc),
 ::view-transition-new(open-doc) {
   height: 100%;

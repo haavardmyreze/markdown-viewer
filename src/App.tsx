@@ -124,9 +124,26 @@ function App() {
 
   /** Navigate to a state, updating history and scroll in one place. */
   const navigate = (next: AppState) => {
-    withViewTransition(() => {
+    const transition = withViewTransition(() => {
       setState(next)
     })
+
+    // The card→document morph only applies to the transition that's actually
+    // opening a document — name the canvas transiently, just for this one
+    // transition, and clear it the moment it finishes. A name left in place
+    // would make every *later* transition (switching themes, going back to
+    // the library) pay to re-snapshot the whole — possibly very long —
+    // document, which is what made those feel like they hung.
+    if (next.view === 'reader' && transition) {
+      const canvas = document.querySelector<HTMLElement>('.reader-canvas')
+      if (canvas) {
+        canvas.style.viewTransitionName = 'open-doc'
+        void transition.finished.finally(() => {
+          canvas.style.viewTransitionName = ''
+        })
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: 'auto' })
     window.history.pushState(null, '', urlForState(next))
 

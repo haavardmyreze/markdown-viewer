@@ -77,7 +77,10 @@ function ThemeMenu({
 
 // The clicked card's sheet morphs into the reader canvas (view transition).
 // Module-level so a failed open can't leave two elements named 'open-doc',
-// which would make the browser skip the transition entirely.
+// which would make the browser skip the transition entirely. Transient by
+// design — App.tsx's navigate() clears the matching name on the reader side
+// as soon as that one transition finishes, so it never lingers to slow down
+// later, unrelated transitions.
 let lastNamedPreview: HTMLElement | null = null
 
 function markOpeningCard(card: HTMLElement) {
