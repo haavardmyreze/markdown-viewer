@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -169,6 +170,13 @@ export default function PdfReader({
     },
     [index],
   )
+
+  // Fit-to-width is the natural default zoom for a freshly opened PDF.
+  useLayoutEffect(() => {
+    if (index) {
+      applyFitZoom('width')
+    }
+  }, [index, applyFitZoom])
 
   const stepZoom = useCallback((direction: 'in' | 'out') => {
     setPageZoom((current) => stepPageZoom(current, direction))

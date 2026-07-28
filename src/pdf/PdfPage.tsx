@@ -61,8 +61,13 @@ export default function PdfPage({
           throw new Error('Canvas is not available')
         }
 
-        canvas.width = viewport.width
-        canvas.height = viewport.height
+        // Render at device-pixel resolution and downscale via CSS, or the
+        // canvas looks soft on any HiDPI/Retina display.
+        const outputScale = window.devicePixelRatio || 1
+        canvas.width = Math.floor(viewport.width * outputScale)
+        canvas.height = Math.floor(viewport.height * outputScale)
+        canvas.style.width = `${Math.floor(viewport.width)}px`
+        canvas.style.height = `${Math.floor(viewport.height)}px`
         canvas.className = 'pdf-page-canvas'
 
         const textLayerHost = document.createElement('div')
@@ -82,6 +87,7 @@ export default function PdfPage({
           canvas,
           canvasContext: context,
           viewport,
+          transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined,
         }).promise
 
         if (cancelled) {
