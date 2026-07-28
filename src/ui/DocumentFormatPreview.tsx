@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { DocumentFormat } from '../documents/types'
 import { ImageFormatIcon } from './icons'
 
@@ -6,6 +7,8 @@ type DocumentFormatPreviewProps = {
   title: string
   /** Real captured thumbnail (data URL); replaces the stylized preview. */
   thumbnail?: string | null
+  /** Overlay (e.g. a resume badge) anchored to the sheet, not the caption below it. */
+  badge?: ReactNode
 }
 
 function MarkdownPreviewBody({ title }: { title: string }) {
@@ -68,11 +71,13 @@ export function DocumentFormatPreview({
   format,
   title,
   thumbnail,
+  badge,
 }: DocumentFormatPreviewProps) {
   if (thumbnail) {
     return (
       <div className={`doc-card-preview doc-card-preview-${format}`}>
         <img className="doc-card-thumb" src={thumbnail} alt="" aria-hidden="true" />
+        {badge}
       </div>
     )
   }
@@ -84,6 +89,7 @@ export function DocumentFormatPreview({
       {format === 'csv' ? <CsvPreviewBody /> : null}
       {format === 'image' ? <ImagePreviewBody /> : null}
       {format === 'code' ? <CodePreviewBody /> : null}
+      {badge}
     </div>
   )
 }

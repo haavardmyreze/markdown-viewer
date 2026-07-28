@@ -11,7 +11,6 @@ import {
   buildHomeDocuments,
   homeDocumentActive,
   homeDocumentDocKey,
-  homeDocumentExcerpt,
   homeDocumentFormat,
   homeDocumentLibraryDoc,
   homeDocumentTitle,
@@ -271,7 +270,6 @@ function Home({
           {homeDocuments.map((item) => {
             const libraryDoc = homeDocumentLibraryDoc(item, getLibraryDoc)
             const title = homeDocumentTitle(item, getLibraryDoc)
-            const excerpt = homeDocumentExcerpt(item, getLibraryDoc)
             const format = homeDocumentFormat(item)
             const docKey = homeDocumentDocKey(item)
             const isActive = homeDocumentActive(item, activeDocId)
@@ -302,12 +300,14 @@ function Home({
                   format={format}
                   title={title}
                   thumbnail={loadDocumentThumbnail(docKey)}
+                  badge={
+                    resumeLabel ? (
+                      <span className="doc-card-badge">{resumeLabel}</span>
+                    ) : null
+                  }
                 />
                 <div className="doc-card-body">
                   <span className="doc-card-title">{title}</span>
-                  {excerpt ? (
-                    <span className="doc-card-excerpt">{excerpt}</span>
-                  ) : null}
                   <div className="doc-card-meta">
                     <span>{formatRecentFormatLabel(format)}</span>
                     {item.source === 'recent' ? (
@@ -339,9 +339,6 @@ function Home({
                     ) : null}
                   </div>
                 </div>
-                {resumeLabel ? (
-                  <span className="doc-card-badge">{resumeLabel}</span>
-                ) : null}
               </button>
             )
           })}
