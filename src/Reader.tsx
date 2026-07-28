@@ -573,6 +573,16 @@ function Reader({
     }
   }, [toc])
 
+  // Themes swap the paper's font (e.g. Ink's monospace), which reflows the
+  // whole document — anchor the same way view-mode/scale changes do.
+  const selectTheme = useCallback(
+    (preference: ThemePreference) => {
+      captureScrollAnchor()
+      onSelectTheme(preference)
+    },
+    [captureScrollAnchor, onSelectTheme],
+  )
+
   const changeViewMode = (mode: DocumentViewMode) => {
     if (mode === viewMode) {
       return
@@ -713,7 +723,7 @@ function Reader({
     return () => {
       cancelled = true
     }
-  }, [viewMode, pageSize, pageZoom, typeScale, typeLeading, pagedContent, cardContent, comments])
+  }, [viewMode, pageSize, pageZoom, typeScale, typeLeading, pagedContent, cardContent, comments, theme])
 
   // Layout-aware pagination: measure real element heights off-screen, then
   // pack blocks into pages (pure algorithm in markdown/paginate.ts).
@@ -1098,7 +1108,7 @@ function Reader({
         </div>
       </div>
 
-      <ThemePicker preference={themePreference} onSelect={onSelectTheme} />
+      <ThemePicker preference={themePreference} onSelect={selectTheme} />
     </>
   )
 
@@ -1154,7 +1164,7 @@ function Reader({
       },
     ]),
     libraryPaletteGroup(onOpenLibrary, fileName),
-    themePaletteGroup(themePreference, onSelectTheme),
+    themePaletteGroup(themePreference, selectTheme),
   ]
 
   return (
