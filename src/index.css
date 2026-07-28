@@ -334,6 +334,44 @@
   --font-body: 'Avenir Next', 'Segoe UI', system-ui, 'Helvetica Neue', sans-serif;
 }
 
+/* ================================================================== *
+ * Day room — when appearance is Light, the chrome around the paper is
+ * light too. Overrides ONLY these room tokens; NEVER --content-*,
+ * --paper, --ui-border, fonts, or --syntax-*.
+ * Specificity: html[data-room='day'] (0,1,1) beats :root/[data-theme]
+ * (0,1,0); the second arm (0,2,2) beats [data-theme] re-declarations on
+ * .reader-root/.reader-canvas. Swatches keep their own palette look.
+ * ================================================================== */
+html[data-room='day'],
+html[data-room='day'] [data-theme]:not(.theme-swatch) {
+  --bg: #f4f2ee;
+  --surface: #fbfaf7;
+  --surface-raised: #ffffff;
+  --ink: #262421;
+  --ink-soft: #4a4741;
+  --muted: #6e6a62;
+  --line: #e2ddd3;
+  --line-strong: #c9c3b6;
+}
+
+html[data-room='day'] {
+  /* On a light floor, elevation reads through shadow, not lightness. */
+  --shadow-paper:
+    0 1px 2px rgba(60, 52, 38, 0.1),
+    0 16px 32px rgba(60, 52, 38, 0.16);
+  --shadow-overlay:
+    0 1px 2px rgba(60, 52, 38, 0.12),
+    0 10px 30px rgba(60, 52, 38, 0.18);
+  --status-ok: #2f7d4f;
+  --status-warn: #8a6d1a;
+  --status-danger: #b0433e;
+  color-scheme: light;
+}
+
+html[data-room='night'] {
+  color-scheme: dark;
+}
+
 *,
 *::before,
 *::after {

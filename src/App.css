@@ -696,6 +696,15 @@
   outline-offset: 1px;
 }
 
+/* Slate has no [data-theme='slate'] block of its own (it IS the :root
+   default), so unlike the other four swatches it has no direct rule to
+   fall back on against the day-room override cascading down from <html> —
+   without this, its swatch would incorrectly show the day room instead of
+   its own dark one. */
+.theme-swatch[data-theme='slate'] {
+  --bg: #0e0e0e;
+}
+
 /* ================================================================== *
  * Home hub — fixed modern chrome look (never themed).
  * ================================================================== */
