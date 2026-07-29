@@ -47,6 +47,29 @@ function CsvPreviewBody() {
   )
 }
 
+function DocxPreviewBody({ title }: { title: string }) {
+  return (
+    <div className="doc-card-format-sheet doc-card-format-sheet-docx">
+      <span className="doc-card-format-sheet-title">{title}</span>
+      <span className="doc-card-format-sheet-block wide" />
+      <span className="doc-card-format-sheet-block" />
+      <span className="doc-card-format-sheet-block wide" />
+      <span className="doc-card-format-sheet-block short" />
+    </div>
+  )
+}
+
+function PptxPreviewBody({ title }: { title: string }) {
+  return (
+    <div className="doc-card-format-sheet doc-card-format-sheet-pptx">
+      <span className="doc-card-format-sheet-title">{title}</span>
+      <span className="doc-card-format-slide" aria-hidden="true" />
+      <span className="doc-card-format-sheet-block" />
+      <span className="doc-card-format-sheet-block short" />
+    </div>
+  )
+}
+
 function ImagePreviewBody() {
   return (
     <div className="doc-card-format-frame" aria-hidden="true">
@@ -87,6 +110,9 @@ export function DocumentFormatPreview({
       {format === 'markdown' ? <MarkdownPreviewBody title={title} /> : null}
       {format === 'pdf' ? <PdfPreviewBody title={title} /> : null}
       {format === 'csv' ? <CsvPreviewBody /> : null}
+      {format === 'excel' ? <CsvPreviewBody /> : null}
+      {format === 'docx' ? <DocxPreviewBody title={title} /> : null}
+      {format === 'pptx' ? <PptxPreviewBody title={title} /> : null}
       {format === 'image' ? <ImagePreviewBody /> : null}
       {format === 'code' ? <CodePreviewBody /> : null}
       {badge}

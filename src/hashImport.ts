@@ -3,6 +3,7 @@ import { detectCodeLanguage } from './code/detectLanguage'
 import type { DocumentFormat } from './documents/types'
 import type { OpenDocument } from './documentState'
 import { hashArrayBuffer } from './documentKey'
+import { excelToCsv } from './excel/excelToCsv'
 
 export type HashImportPayload = {
   name: string
@@ -84,6 +85,34 @@ export function parseHashImport(hash: string): OpenDocument | null {
           fileName: payload.name,
           libraryId: '',
           fingerprint: hashArrayBuffer(data),
+        }
+      }
+
+      if (format === 'docx') {
+        return {
+          source: { format: 'docx', data },
+          fileName: payload.name,
+          libraryId: '',
+          fingerprint: hashArrayBuffer(data),
+        }
+      }
+
+      if (format === 'pptx') {
+        return {
+          source: { format: 'pptx', data },
+          fileName: payload.name,
+          libraryId: '',
+          fingerprint: hashArrayBuffer(data),
+        }
+      }
+
+      if (format === 'excel') {
+        const content = excelToCsv(data)
+        return {
+          source: { format: 'excel', content },
+          fileName: payload.name,
+          libraryId: '',
+          fingerprint: content,
         }
       }
 

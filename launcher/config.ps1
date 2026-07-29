@@ -15,6 +15,10 @@ $Script:SupportedExtensions = @(
   '.markdown',
   '.pdf',
   '.csv',
+  '.xlsx',
+  '.xls',
+  '.docx',
+  '.pptx',
   '.png',
   '.jpg',
   '.jpeg',
@@ -32,6 +36,10 @@ $Script:MimeTypes = @{
   '.markdown' = 'text/markdown'
   '.csv' = 'text/csv'
   '.pdf' = 'application/pdf'
+  '.xlsx' = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  '.xls' = 'application/vnd.ms-excel'
+  '.docx' = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  '.pptx' = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
   '.png' = 'image/png'
   '.jpg' = 'image/jpeg'
   '.jpeg' = 'image/jpeg'

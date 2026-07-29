@@ -16,8 +16,10 @@
   },
   "dependencies": {
     "@fontsource-variable/literata": "^5.2.8",
+    "docx-preview": "^0.4.0",
     "hdrify": "^0.12.1",
     "highlight.js": "^11.11.1",
+    "jszip": "^3.10.1",
     "papaparse": "^5.5.4",
     "pdfjs-dist": "^6.1.200",
     "perfect-freehand": "^1.2.3",
@@ -29,7 +31,8 @@
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0",
-    "utif": "^3.1.0"
+    "utif": "^3.1.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",

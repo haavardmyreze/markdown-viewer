@@ -14,6 +14,18 @@ export function detectFormatFromFileName(fileName: string): DocumentFormat {
     return 'csv'
   }
 
+  if (/\.xlsx?$/i.test(fileName)) {
+    return 'excel'
+  }
+
+  if (/\.docx$/i.test(fileName)) {
+    return 'docx'
+  }
+
+  if (/\.pptx$/i.test(fileName)) {
+    return 'pptx'
+  }
+
   if (isImageFileName(fileName)) {
     return 'image'
   }
@@ -34,6 +46,26 @@ function detectFormatFromDataMime(mime: string): DocumentFormat | null {
 
   if (normalized === 'text/csv') {
     return 'csv'
+  }
+
+  if (
+    normalized === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    normalized === 'application/vnd.ms-excel'
+  ) {
+    return 'excel'
+  }
+
+  if (
+    normalized === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ) {
+    return 'docx'
+  }
+
+  if (
+    normalized ===
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  ) {
+    return 'pptx'
   }
 
   if (normalized.startsWith('image/')) {
@@ -106,6 +138,15 @@ export function detectFormatFromSrc(src: string, fileName?: string): DocumentFor
     if (/\.csv$/i.test(url.pathname)) {
       return 'csv'
     }
+    if (/\.xlsx?$/i.test(url.pathname)) {
+      return 'excel'
+    }
+    if (/\.docx$/i.test(url.pathname)) {
+      return 'docx'
+    }
+    if (/\.pptx$/i.test(url.pathname)) {
+      return 'pptx'
+    }
     if (IMAGE_EXTENSION_PATTERN.test(url.pathname)) {
       return 'image'
     }
@@ -118,6 +159,15 @@ export function detectFormatFromSrc(src: string, fileName?: string): DocumentFor
     }
     if (/\.csv$/i.test(src)) {
       return 'csv'
+    }
+    if (/\.xlsx?$/i.test(src)) {
+      return 'excel'
+    }
+    if (/\.docx$/i.test(src)) {
+      return 'docx'
+    }
+    if (/\.pptx$/i.test(src)) {
+      return 'pptx'
     }
     if (IMAGE_EXTENSION_PATTERN.test(src)) {
       return 'image'

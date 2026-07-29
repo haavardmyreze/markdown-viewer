@@ -854,6 +854,41 @@
   width: 58%;
 }
 
+/* Word: blue accent. */
+.doc-card-format-sheet-docx {
+  background: #f2f6fc;
+}
+
+.doc-card-format-sheet-docx .doc-card-format-sheet-title {
+  color: #1a3d7c;
+}
+
+.doc-card-format-sheet-docx .doc-card-format-sheet-block {
+  background: color-mix(in srgb, #2b579a 18%, #d7e3f7);
+}
+
+/* PowerPoint: orange accent, plus a landscape block standing in for the
+   first slide's thumbnail. */
+.doc-card-format-sheet-pptx {
+  background: #fdf3ee;
+}
+
+.doc-card-format-sheet-pptx .doc-card-format-sheet-title {
+  color: #8a3a12;
+}
+
+.doc-card-format-sheet-pptx .doc-card-format-sheet-block {
+  background: color-mix(in srgb, #c8480f 18%, #f6ded1);
+}
+
+.doc-card-format-slide {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 3px;
+  background: color-mix(in srgb, #c8480f 14%, #f6ded1);
+  border: 1px solid color-mix(in srgb, #c8480f 22%, transparent);
+}
+
 .doc-card-format-grid {
   width: 100%;
   max-width: 11rem;
@@ -3754,6 +3789,89 @@ body.canvas-zoom-scrub-dragging .reader-root .ink-overlay-canvas {
   min-height: calc(100vh - var(--topbar-total) - 1rem);
   color: var(--content-muted);
   font-family: var(--font-ui);
+}
+
+/* docx-preview renders its own real page styling (fonts/colors straight
+   from the Word doc) — we only own layout/spacing/zoom around it, never
+   its internal typography. */
+.docx-page-host {
+  transform: scale(var(--docx-zoom, 1));
+  transform-origin: top center;
+  margin: 1.5rem 0 4rem;
+}
+
+.docx-message {
+  margin: 4rem 1rem;
+  max-width: 32rem;
+  font-family: var(--font-ui);
+  color: var(--content-ink-soft);
+}
+
+.docx-message h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  margin: 0 0 0.5rem;
+}
+
+/* pptx has no client-side slide renderer worth shipping, so each slide is
+   shown as extracted text + images in reading order — a fallback, not a
+   faithful reproduction of the deck's actual layout. */
+.pptx-slide-host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  width: min(700px, 100%);
+  transform: scale(var(--docx-zoom, 1));
+  transform-origin: top center;
+  margin: 1.5rem 0 4rem;
+}
+
+.pptx-slide {
+  width: 100%;
+  padding: var(--space-6);
+  background: var(--paper);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--paper-radius);
+  box-shadow: var(--shadow-paper);
+  color: var(--content-ink-soft);
+  font-family: var(--font-body);
+}
+
+.pptx-slide-number {
+  margin: 0 0 var(--space-4);
+  color: var(--content-muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pptx-slide-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 0 var(--space-4);
+  border-radius: 4px;
+}
+
+.pptx-slide-text {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+
+.pptx-slide-empty {
+  margin: 0;
+  color: var(--content-muted);
+  font-style: italic;
+}
+
+.docx-loading {
+  margin: 4rem 0;
+  color: var(--content-muted);
+  font-family: var(--font-ui);
+  text-align: center;
 }
 
 .reader-root[data-draw-mode='true'] .topbar-shell,

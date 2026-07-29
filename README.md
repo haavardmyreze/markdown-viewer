@@ -1,6 +1,8 @@
 # Quiet Reader
 
-A calm, typography-focused document viewer. Opens Markdown, PDF, CSV, images, and code in one consistent reading surface — with contents, search, comments, an AI assistant, and a presentation mode (laser pointer + ink annotation) built in.
+A calm, typography-focused document viewer. Opens Markdown, PDF, CSV, Excel, Word, PowerPoint, images, and code in one consistent reading surface — with contents, search, comments, an AI assistant, and a presentation mode (laser pointer + ink annotation) built in.
+
+Word and PowerPoint render fully client-side — nothing ever leaves the browser. Word (.docx) renders with real formatting; PowerPoint (.pptx) has no client-side slide renderer to lean on, so slides show as extracted text and images in reading order, not a faithful reproduction of the deck's layout.
 
 Press the **Present** button in the toolbar (or `L` for laser, `D` to draw) to fade the chrome away and present a document; `Esc` exits. The command palette is on `Ctrl Space`.
 

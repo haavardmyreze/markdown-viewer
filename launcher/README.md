@@ -18,7 +18,7 @@ This also installs `quiet-reader.ico` for the **Quiet Reader** app and associate
 
 File associations register as **Quiet Reader** (`Open-InViewer.bat` in the Open with list) but launch the hidden `Open-InViewer.vbs` handler, so no command prompt appears.
 
-Supported extensions: `.md`, `.markdown`, `.pdf`, `.csv`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.tif`, `.tiff`, `.exr`, `.hdr`.
+Supported extensions: `.md`, `.markdown`, `.pdf`, `.csv`, `.xlsx`, `.xls`, `.docx`, `.pptx`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.tif`, `.tiff`, `.exr`, `.hdr`.
 
 ## Manual test
 

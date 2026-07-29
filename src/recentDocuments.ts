@@ -200,6 +200,12 @@ export function formatRecentFormatLabel(format: DocumentFormat) {
       return 'Image'
     case 'code':
       return 'Code'
+    case 'excel':
+      return 'Excel'
+    case 'docx':
+      return 'Word'
+    case 'pptx':
+      return 'PowerPoint'
   }
 }
 

@@ -15,6 +15,9 @@ import CodeReader from '../code/CodeReader'
 import { CODE_EXTENSIONS } from '../code/codeExtensions'
 import { detectCodeLanguage } from '../code/detectLanguage'
 import { IMAGE_EXTENSIONS_LIST } from '../image/imageFormat'
+import { excelToCsv } from '../excel/excelToCsv'
+import DocxReader from '../docx/DocxReader'
+import PptxReader from '../pptx/PptxReader'
 
 export type ReaderProps = {
   source: DocumentSource
@@ -163,6 +166,119 @@ const csvAdapter: DocumentAdapter = {
   Reader: CsvAdapterReader,
 }
 
+function ExcelAdapterReader(props: ReaderProps) {
+  if (props.source.format !== 'excel') {
+    return null
+  }
+  return (
+    <CsvReader
+      csvContent={props.source.content}
+      fileName={props.fileName}
+      docKey={props.docKey}
+      theme={props.theme}
+      themePreference={props.themePreference}
+      onSelectTheme={props.onSelectTheme}
+      onHome={props.onHome}
+      onOpenLibrary={props.onOpenLibrary}
+    />
+  )
+}
+
+const excelAdapter: DocumentAdapter = {
+  format: 'excel',
+  label: 'Excel',
+  extensions: ['.xlsx', '.xls'],
+  mimeTypes: [
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-excel',
+  ],
+  readFile: async (file) => {
+    const data = await file.arrayBuffer()
+    const content = excelToCsv(data)
+    return { source: { format: 'excel', content }, fingerprint: content }
+  },
+  readResponse: async (response) => {
+    const data = await response.arrayBuffer()
+    const content = excelToCsv(data)
+    return { source: { format: 'excel', content }, fingerprint: content }
+  },
+  Reader: ExcelAdapterReader,
+}
+
+function DocxAdapterReader(props: ReaderProps) {
+  if (props.source.format !== 'docx') {
+    return null
+  }
+  return (
+    <DocxReader
+      docxData={props.source.data}
+      fileName={props.fileName}
+      docKey={props.docKey}
+      theme={props.theme}
+      themePreference={props.themePreference}
+      onSelectTheme={props.onSelectTheme}
+      onHome={props.onHome}
+      onOpenLibrary={props.onOpenLibrary}
+    />
+  )
+}
+
+const docxAdapter: DocumentAdapter = {
+  format: 'docx',
+  label: 'Word',
+  // Modern OOXML .docx only — docx-preview can't parse the legacy binary
+  // .doc format.
+  extensions: ['.docx'],
+  mimeTypes: [
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ],
+  readFile: async (file) => {
+    const data = await file.arrayBuffer()
+    return { source: { format: 'docx', data }, fingerprint: hashArrayBuffer(data) }
+  },
+  readResponse: async (response) => {
+    const data = await response.arrayBuffer()
+    return { source: { format: 'docx', data }, fingerprint: hashArrayBuffer(data) }
+  },
+  Reader: DocxAdapterReader,
+}
+
+function PptxAdapterReader(props: ReaderProps) {
+  if (props.source.format !== 'pptx') {
+    return null
+  }
+  return (
+    <PptxReader
+      pptxData={props.source.data}
+      fileName={props.fileName}
+      docKey={props.docKey}
+      theme={props.theme}
+      themePreference={props.themePreference}
+      onSelectTheme={props.onSelectTheme}
+      onHome={props.onHome}
+      onOpenLibrary={props.onOpenLibrary}
+    />
+  )
+}
+
+const pptxAdapter: DocumentAdapter = {
+  format: 'pptx',
+  label: 'PowerPoint',
+  extensions: ['.pptx'],
+  mimeTypes: [
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  ],
+  readFile: async (file) => {
+    const data = await file.arrayBuffer()
+    return { source: { format: 'pptx', data }, fingerprint: hashArrayBuffer(data) }
+  },
+  readResponse: async (response) => {
+    const data = await response.arrayBuffer()
+    return { source: { format: 'pptx', data }, fingerprint: hashArrayBuffer(data) }
+  },
+  Reader: PptxAdapterReader,
+}
+
 const imageAdapter: DocumentAdapter = {
   format: 'image',
   label: 'Image',
@@ -284,6 +400,9 @@ export const DOCUMENT_ADAPTERS: DocumentAdapter[] = [
   markdownAdapter,
   pdfAdapter,
   csvAdapter,
+  excelAdapter,
+  docxAdapter,
+  pptxAdapter,
   imageAdapter,
   codeAdapter,
 ]
