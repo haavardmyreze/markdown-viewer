@@ -8,8 +8,10 @@ import { useDismissablePopover } from './usePopover'
  */
 function useRecedingChrome(pinned: boolean) {
   const [hidden, setHidden] = useState(false)
-  const [progress, setProgress] = useState(0)
   const hiddenRef = useRef(false)
+  // The progress bar is written straight to the DOM: a scroll-linked value
+  // re-rendered through state would stutter behind the scroll.
+  const progressRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     hiddenRef.current = hidden
@@ -17,12 +19,25 @@ function useRecedingChrome(pinned: boolean) {
 
   useEffect(() => {
     let lastY = window.scrollY
+    let frame = 0
+    let lastPercent = -1
 
-    const onScroll = () => {
+    const paint = () => {
+      frame = 0
       const y = window.scrollY
       const el = document.scrollingElement ?? document.documentElement
       const max = el.scrollHeight - window.innerHeight
-      setProgress(max > 0 ? Math.min(1, Math.max(0, y / max)) : 0)
+      const progress = max > 0 ? Math.min(1, Math.max(0, y / max)) : 0
+
+      const bar = progressRef.current
+      if (bar) {
+        bar.style.transform = `scaleX(${progress})`
+        const percent = Math.round(progress * 100)
+        if (percent !== lastPercent) {
+          bar.setAttribute('aria-valuenow', String(percent))
+          lastPercent = percent
+        }
+      }
 
       if (y > lastY + 4 && y > 140) {
         setHidden(true)
@@ -32,22 +47,30 @@ function useRecedingChrome(pinned: boolean) {
       lastY = y
     }
 
+    // Coalesce bursts of scroll events into one write per animation frame.
+    const onScroll = () => {
+      if (frame === 0) frame = requestAnimationFrame(paint)
+    }
+
     const onMouseMove = (event: MouseEvent) => {
       if (hiddenRef.current && event.clientY < 72) {
         setHidden(false)
       }
     }
 
-    onScroll()
+    paint()
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
     window.addEventListener('mousemove', onMouseMove, { passive: true })
     return () => {
+      if (frame !== 0) cancelAnimationFrame(frame)
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
       window.removeEventListener('mousemove', onMouseMove)
     }
   }, [])
 
-  return { hidden: hidden && !pinned, progress }
+  return { hidden: hidden && !pinned, progressRef }
 }
 
 export type TopbarAction = {
@@ -89,7 +112,7 @@ export function ReaderTopbar({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settingsRef = useRef<HTMLDivElement | null>(null)
   const closeSettings = useCallback(() => setSettingsOpen(false), [])
-  const { hidden, progress } = useRecedingChrome(settingsOpen)
+  const { hidden, progressRef } = useRecedingChrome(settingsOpen)
 
   useDismissablePopover(settingsRef, settingsOpen, closeSettings)
 
@@ -106,13 +129,13 @@ export function ReaderTopbar({
   return (
     <>
       <div
+        ref={progressRef}
         className="reader-progress"
         role="progressbar"
         aria-label="Reading progress"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={Math.round(progress * 100)}
-        style={{ transform: `scaleX(${progress})` }}
+        aria-valuenow={0}
       />
       <div
         className={

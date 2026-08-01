@@ -2874,7 +2874,9 @@
   opacity: 0.85;
   transform-origin: 0 50%;
   transform: scaleX(0);
-  transition: transform 0.15s linear;
+  /* No transition: the bar is scroll-linked, so any tween lags the scroll
+     and reads as stepping rather than tracking. */
+  will-change: transform;
   z-index: 60;
   pointer-events: none;
 }
