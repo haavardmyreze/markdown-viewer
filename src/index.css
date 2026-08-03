@@ -68,6 +68,10 @@
   --reader-max: 1180px;
   --home-max: 1080px;
   --toc-width: clamp(190px, 15vw, 236px);
+  /* The comment rail's own width, and the column the document gives up to it
+     while comment mode is on (rail + breathing room for the connectors). */
+  --comment-rail-w: clamp(16rem, 18vw, 19rem);
+  --comment-rail-reserve: calc(var(--comment-rail-w) + 1.75rem);
   --gutter: clamp(1rem, 3.5vw, 2.5rem);
   --header-h: 3.75rem;
   --topbar-shell-pad: 0.55rem;

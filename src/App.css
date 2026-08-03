@@ -2299,9 +2299,22 @@
   top: calc(var(--topbar-total) + 0.75rem);
   right: var(--gutter);
   bottom: 0.75rem;
-  width: clamp(16rem, 18vw, 19rem);
+  width: var(--comment-rail-w);
   pointer-events: none;
   z-index: 45;
+}
+
+/* The rail is fixed, so it would sit ON TOP of a wide document. Comment mode
+   hands the rail's column back to the layout: the stage centres what is left,
+   which slides the paper left into the empty space rather than under the rail.
+   Only if that space is narrower than the paper does the paper give up width.
+   Not below 620px — there the rail is a bottom sheet, not a right rail.
+   Deliberately untransitioned: animating padding relayouts the whole document
+   every frame, and these documents get long. */
+@media (min-width: 621px) {
+  .reader-canvas[data-comment-mode='true'] .doc-stage {
+    padding-right: var(--comment-rail-reserve);
+  }
 }
 
 .comment-rail-panel {
